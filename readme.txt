@@ -1,0 +1,170 @@
+=== Nyuchi WordPress Optimization ===
+Contributors: nyuchi
+Tags: seo, database, cleanup, metadata, automation
+Requires at least: 5.0
+Tested up to: 7.0
+Requires PHP: 7.4
+Stable tag: 1.2.3
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+SEO, metadata, and database cleaning and editing. Fills empty Yoast SEO fields, reports what is costing the database, and exposes both to the REST API.
+
+== Description ==
+
+Nyuchi SEO Addons writes into the Yoast SEO title, meta description and focus keyword
+fields when they have been left empty. It is aimed at sites where the content volume has
+outgrown the effort available to hand-write every field, and where a consistent template is
+preferable to a blank.
+
+It is not connected to, endorsed by, or affiliated with Team Yoast. Yoast SEO must be
+installed and active; this plugin writes into Yoast's own fields rather than replacing them.
+
+= Content extraction that understands page builders =
+
+Generating a description from `post_content` produces nothing useful on a site built with a
+page builder, because the readable text is stored inside builder data rather than in the
+post body. This plugin extracts text from Elementor and Beaver Builder layouts, from
+Gutenberg blocks, and from Advanced Custom Fields, so the generated description reflects
+what the page actually says.
+
+Each integration is a separate switch. Turning one off leaves its filters unregistered,
+which is also the quickest way to isolate one when checking generated output.
+
+= Title templates =
+
+Per post type, with placeholders for the post title, the site name and the current year.
+On sites running WP Travel, trip templates additionally accept the trip duration, price,
+destination and primary activity, and separators around empty placeholders are collapsed so
+a trip with no price does not render a stray divider.
+
+= Logging you can actually leave switched on =
+
+Activity logging has four levels. **Off** writes nothing. **Errors** records failures only.
+**Actions** records real SEO changes and is the default. **Verbose** additionally records
+integration start-up, which fires on every request and is intended for short debugging
+sessions rather than permanent use.
+
+A retention window and a hard row cap are applied by a daily cron, and both can be run on
+demand. This exists because logging that grows without limit eventually becomes the
+performance problem it was meant to help diagnose.
+
+= REST API =
+
+Routes under `auto-seo/v1` expose status, settings, log entries and a manual run, so the
+plugin can be driven by automation and AI clients rather than only through wp-admin. Every
+route requires an authenticated user with the `manage_options` capability.
+
+== Installation ==
+
+1. Upload the plugin folder to `/wp-content/plugins/`, or install it through the Plugins
+   screen in WordPress.
+2. Activate the plugin through the Plugins screen.
+3. Open **SEO Addons** in the admin menu, choose the post types to process, and review the
+   title templates.
+
+Yoast SEO must be installed and active.
+
+== Frequently Asked Questions ==
+
+= Will it overwrite SEO fields I have written myself? =
+
+No. Generation applies to fields that are empty. Existing titles, descriptions and focus
+keywords are left alone.
+
+= Does it replace Yoast SEO? =
+
+No. It writes into Yoast's fields and depends on Yoast being active. Yoast remains the
+source of truth for output, sitemaps and analysis.
+
+= Why is the activity log empty? =
+
+Either nothing has run yet, or the log level is set to Off or Errors. The default level,
+Actions, records generated titles, descriptions and keywords. Run a manual update from the
+Tools tab to confirm.
+
+= The log table grew very large. What should I do? =
+
+Set a retention window and a row cap on the Activity Log tab and leave daily pruning
+enabled. Use Purge to clear existing entries. If the log grew while verbose logging was on,
+lower the level to Actions.
+
+= Can I trigger runs from outside WordPress? =
+
+Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST API exposes
+a run endpoint for authenticated clients. Treat the cron URL as a credential.
+
+== Changelog ==
+
+= 1.2.3 =
+* Abilities moved from the nyuchi-seo namespace to nyuchi-optimization, so the
+  names match what the plugin now is. This renames every ability: anything
+  calling nyuchi-seo/get-status needs updating to nyuchi-optimization/get-status.
+  Done now, while the only consumer is a single site, rather than later.
+
+= 1.2.2 =
+* Fixed settings not saving. Moving the save to admin_init in 1.1.0 introduced
+  a guard that tested the submit field with empty(). The save buttons carry a
+  name but no value, so a browser submits an empty string, which empty() reads
+  as absent - every save from Settings, Integrations and Logs was discarded
+  before anything was written. Tools was unaffected because it posts a hidden
+  submit=1, which is why the failure looked partial rather than total.
+* Selected post types are now checked against the registered types before
+  being stored. The submitted array went straight into the option, and every
+  later read hands it to WP_Query, where an unregistered type returns nothing
+  at all rather than raising an error.
+
+= 1.2.1 =
+* Three more database abilities, which together are what a dedicated cleaner
+  plugin is usually installed for: tables that no plugin on disk appears to
+  claim, scheduled events whose hook has no listener, and OPTIMIZE TABLE to
+  reclaim the overhead the size report shows.
+* Both detections are reported as candidates rather than verdicts. Table
+  attribution is a name heuristic and some plugins name tables nothing like
+  their slug; cron hooks are frequently registered conditionally, so a hook
+  with no listener in one request may have a perfectly good one in another.
+  Neither removes anything on its own.
+
+= 1.2.0 =
+* Renamed to Nyuchi WordPress Optimization. The plugin had grown past
+  "SEO addons": it now covers metadata and the database as well, and the old
+  name described about a third of it.
+* Database module. Four new abilities: a per-table size and overhead report,
+  a count of every category of row nothing reads any more, a breakdown of the
+  autoloaded options that are read on every single request, and a cleanup
+  operation for named categories.
+* Cleanup defaults to a dry run. It reports what would be removed and changes
+  nothing unless dry_run is explicitly false, so a malformed call fails safe.
+  Deletion is capped per call, because a single statement across millions of
+  rows gets killed part-way through on managed hosting.
+* Built on $wpdb rather than on another cleanup plugin's internals, so nothing
+  here stops working when that plugin is deactivated.
+* Admin sections switch without reloading the page, and the active tab now
+  matches the shape of the buttons beside it.
+* Settings save before output begins, fixing the blank screen on save.
+
+= 1.1.0 =
+* Logging levels, retention window, row cap, daily pruning, manual prune and purge.
+* Integration start-up logging reclassified as verbose. It previously wrote one row per
+  active integration on every request.
+* REST API under `auto-seo/v1` for status, settings, logs and manual runs.
+* WP Travel integration adding trip duration, price, destination and activity placeholders,
+  trip-aware descriptions, and keywords drawn from trip taxonomies.
+* Admin menu moved out of Settings to its own top-level menu; admin screen rebuilt.
+* Fixed: log table identifier widened from `mediumint` to `bigint`, with a migration for
+  existing installations.
+* Fixed: the main automation switch was written under two different option names and read
+  from the wrong one. Existing values are folded onto the correct name on upgrade.
+* Fixed: scheduling moved off the front-end request path, and each scheduled task now
+  follows its own switch.
+* Security: nonce presence is checked before verification in the AJAX handler, and the
+  external cron key is compared with `hash_equals()`.
+
+= 1.0.0 =
+* Initial release.
+
+== Upgrade Notice ==
+
+= 1.1.0 =
+Adds logging controls and fixes a defect that could grow the activity log without limit.
+Review the Activity Log tab after upgrading and set a retention window.
