@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin screen for Yoast SEO Addons.
+ * Admin screen for Nyuchi WordPress Optimization.
  *
  * Included from AutoSEOManager::admin_page(), so $this is the plugin instance.
  * Styling follows the Mzizi/Bundu brand system: tanzanite primary, cobalt for
@@ -65,7 +65,7 @@ $tabs = array(
     <header class="nyx-head">
         <div class="nyx-head-id">
             <span class="nyx-wordmark">nyuchi</span>
-            <h1 class="nyx-title">Yoast SEO Addons</h1>
+            <h1 class="nyx-title">WordPress Optimization</h1>
             <span class="nyx-version">v<?php echo esc_html(AUTO_SEO_VERSION); ?></span>
         </div>
         <div class="nyx-chips">
@@ -98,7 +98,7 @@ $tabs = array(
         <div class="nyx-alert is-good">Settings saved.</div>
     <?php endif; ?>
 
-    <nav class="nyx-tabs" role="tablist" aria-label="Yoast SEO Addons sections">
+    <nav class="nyx-tabs" role="tablist" aria-label="Optimization sections">
         <?php foreach ($tabs as $slug => $meta) : ?>
             <?php $is_on = $current_tab === $slug; ?>
             <a class="nyx-tab <?php echo $is_on ? 'is-active' : ''; ?>"
@@ -564,7 +564,7 @@ $tabs = array(
 </div>
 
 <style>
-/* Yoast SEO Addons — Mzizi/Bundu brand system, scoped to .nyx */
+/* Nyuchi WordPress Optimization — Mzizi/Bundu brand system, scoped to .nyx */
 .nyx {
     --nyx-primary:   #4B0082;  /* tanzanite  */
     --nyx-info:      #0047AB;  /* cobalt     */

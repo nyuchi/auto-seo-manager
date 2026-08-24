@@ -1,15 +1,15 @@
 <?php
 /**
- * Plugin Name: Nyuchi SEO Addons - Automation for Yoast SEO
+ * Plugin Name: Nyuchi WordPress Optimization
  * Plugin URI: https://github.com/nyuchi/auto-seo-manager
- * Description: Extends Yoast SEO with automated title, description and keyword generation, plugin-aware content extraction, and a REST API for automation clients. By Nyuchi Web Services.
- * Version: 1.1.0
+ * Description: SEO, metadata, and database cleaning and editing. Automates Yoast SEO fields, reports what is costing the database, and exposes the lot to the REST API and to MCP clients. By Nyuchi Web Services.
+ * Version: 1.2.0
  * Author: Nyuchi Web Services
  * Author URI: https://nyuchi.com
  * Developer: Bryan Fawcett (@bryanfawcett)
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: nyuchi-seo-addons
+ * Text Domain: nyuchi-wp-optimization
  * Requires at least: 5.0
  * Tested up to: 7.0
  * Requires PHP: 7.4
@@ -25,13 +25,13 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AUTO_SEO_VERSION', '1.1.0');
+define('AUTO_SEO_VERSION', '1.2.0');
 define('AUTO_SEO_DB_VERSION', 2);
 
 class AutoSEOManager {
 
     private $plugin_name = 'auto-seo-manager';
-    private $product_name = 'Nyuchi SEO Addons';
+    private $product_name = 'Nyuchi WordPress Optimization';
     private $version = AUTO_SEO_VERSION;
     private $table_name;
 
@@ -994,8 +994,8 @@ class AutoSEOManager {
      */
     public function add_admin_menu() {
         add_menu_page(
-            'Nyuchi SEO Addons',
-            'SEO Addons',
+            'Nyuchi WordPress Optimization',
+            'Optimization',
             'manage_options',
             'auto-seo-manager',
             array($this, 'admin_page'),
@@ -1013,7 +1013,7 @@ class AutoSEOManager {
         foreach ($subpages as $tab => $label) {
             add_submenu_page(
                 'auto-seo-manager',
-                'SEO Addons — ' . $label,
+                'Optimization — ' . $label,
                 $label,
                 'manage_options',
                 'auto-seo-manager' . ('settings' === $tab ? '' : '&tab=' . $tab),

@@ -1,14 +1,14 @@
-=== Nyuchi SEO Addons - Automation for Yoast SEO ===
+=== Nyuchi WordPress Optimization ===
 Contributors: nyuchi
-Tags: yoast, seo, meta description, automation, rest api
+Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Fills empty Yoast SEO fields automatically, drawing content from page builders and custom fields, with a REST API for automation clients.
+SEO, metadata, and database cleaning and editing. Fills empty Yoast SEO fields, reports what is costing the database, and exposes both to the REST API.
 
 == Description ==
 
@@ -95,6 +95,24 @@ Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
 == Changelog ==
+
+= 1.2.0 =
+* Renamed to Nyuchi WordPress Optimization. The plugin had grown past
+  "SEO addons": it now covers metadata and the database as well, and the old
+  name described about a third of it.
+* Database module. Four new abilities: a per-table size and overhead report,
+  a count of every category of row nothing reads any more, a breakdown of the
+  autoloaded options that are read on every single request, and a cleanup
+  operation for named categories.
+* Cleanup defaults to a dry run. It reports what would be removed and changes
+  nothing unless dry_run is explicitly false, so a malformed call fails safe.
+  Deletion is capped per call, because a single statement across millions of
+  rows gets killed part-way through on managed hosting.
+* Built on $wpdb rather than on another cleanup plugin's internals, so nothing
+  here stops working when that plugin is deactivated.
+* Admin sections switch without reloading the page, and the active tab now
+  matches the shape of the buttons beside it.
+* Settings save before output begins, fixing the blank screen on save.
 
 = 1.1.0 =
 * Logging levels, retention window, row cap, daily pruning, manual prune and purge.

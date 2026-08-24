@@ -571,7 +571,7 @@ class AutoSEOAbilities {
         if (!$this->plugin->is_yoast_active()) {
             return new WP_Error(
                 'auto_seo_yoast_missing',
-                'Yoast SEO is not active. Nyuchi SEO Addons writes into Yoast SEO fields, so generation would have no effect until Yoast is installed and activated.',
+                'Yoast SEO is not active. The SEO module writes into Yoast SEO fields, so generation would have no effect until Yoast is installed and activated.',
                 array('status' => 409)
             );
         }
