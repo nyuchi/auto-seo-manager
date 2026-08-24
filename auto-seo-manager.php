@@ -3,7 +3,7 @@
  * Plugin Name: Nyuchi WordPress Optimization
  * Plugin URI: https://github.com/nyuchi/auto-seo-manager
  * Description: SEO, metadata, and database cleaning and editing. Automates Yoast SEO fields, reports what is costing the database, and exposes the lot to the REST API and to MCP clients. By Nyuchi Web Services.
- * Version: 1.3.0
+ * Version: 1.3.1
  * Author: Nyuchi Web Services
  * Author URI: https://nyuchi.com
  * Developer: Bryan Fawcett (@bryanfawcett)
@@ -25,7 +25,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AUTO_SEO_VERSION', '1.3.0');
+define('AUTO_SEO_VERSION', '1.3.1');
 define('AUTO_SEO_DB_VERSION', 2);
 
 class AutoSEOManager {
@@ -1095,6 +1095,8 @@ class AutoSEOManager {
             $this->save_integration_settings();
         } elseif ($tab === 'logs') {
             $this->save_logging_settings();
+        } elseif ($tab === 'database') {
+            $this->run_database_action();
         }
         
         // Set success flag and redirect
@@ -1136,6 +1138,70 @@ class AutoSEOManager {
         }
 
         return array_values(array_unique($clean));
+    }
+
+    /**
+     * Act on the Database tab.
+     *
+     * Nothing here is a setting - each button performs work immediately - so
+     * this reports what it did through a transient rather than saving state.
+     *
+     * @return void
+     */
+    private function run_database_action() {
+        if (!class_exists('AutoSEODatabase')) {
+            return;
+        }
+
+        $db = new AutoSEODatabase();
+
+        if (!empty($_POST['db_optimize'])) {
+            $result = $db->optimize(array());
+            set_transient(
+                'auto_seo_db_notice',
+                sprintf(
+                    'Reclaimed %s MB across %d table%s.',
+                    number_format((float) $result['freed_mb_total'], 1),
+                    count($result['tables']),
+                    1 === count($result['tables']) ? '' : 's'
+                ),
+                60
+            );
+
+            return;
+        }
+
+        $targets = isset($_POST['db_targets']) ? (array) $_POST['db_targets'] : array();
+        $targets = array_map('sanitize_key', $targets);
+        $targets = array_values(array_filter($targets));
+
+        if (empty($targets)) {
+            set_transient('auto_seo_db_notice', 'Nothing was selected, so nothing was removed.', 60);
+
+            return;
+        }
+
+        // dry_run false: the operator ticked boxes and pressed a button labelled
+        // Delete, which is as explicit as consent gets on an admin screen.
+        $result = $db->cleanup($targets, false);
+
+        $remaining = 0;
+
+        foreach ($result['results'] as $r) {
+            $remaining += isset($r['remaining']) ? (int) $r['remaining'] : 0;
+        }
+
+        set_transient(
+            'auto_seo_db_notice',
+            $remaining
+                ? sprintf(
+                    'Removed %s rows. %s still to go - deletion is capped per run, so press it again.',
+                    number_format((int) $result['removed_total']),
+                    number_format($remaining)
+                )
+                : sprintf('Removed %s rows. Nothing left in the selected categories.', number_format((int) $result['removed_total'])),
+            60
+        );
     }
 
     private function save_basic_settings() {

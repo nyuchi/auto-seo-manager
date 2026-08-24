@@ -4,7 +4,7 @@ Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,23 @@ Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
 == Changelog ==
+
+= 1.3.1 =
+* A Database tab. The database features shipped in 1.2.x as abilities only,
+  reachable by an MCP client but invisible in the admin - so a plugin renamed
+  for database work showed no sign of doing any. The tab reports database size,
+  reclaimable overhead, the weight of the autoloaded options read on every
+  request, and every category of row nothing reads, with the counts and the
+  buttons to clear them.
+* The active tab rendered square while every other tab and button was a pill.
+  After a click the active tab is also the focused one, and the focus ring was
+  drawn with outline - which has only followed border-radius since Safari 16.4
+  and not at all in some older engines, so it painted a rectangle around a
+  pill. The ring now uses box-shadow, which has always followed the radius.
+* A transparent outline is kept alongside it on purpose: Windows High Contrast
+  Mode drops box-shadow entirely and forces transparent outlines to a visible
+  colour, so removing it would make focus invisible to the people who most
+  depend on seeing it.
 
 = 1.3.0 =
 * Updates now arrive through GitHub Releases, so this plugin gets an update
