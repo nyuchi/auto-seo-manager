@@ -7,8 +7,8 @@
  * Author: Nyuchi Web Services
  * Author URI: https://nyuchi.com
  * Developer: Bryan Fawcett (@bryanfawcett)
- * License: GPL v2 or later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * License: MIT
+ * License URI: https://opensource.org/licenses/MIT
  * Text Domain: nyuchi-seo-addons
  * Requires at least: 5.0
  * Tested up to: 7.0
@@ -64,6 +64,12 @@ class AutoSEOManager {
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         add_action('wp_ajax_manual_seo_update', array($this, 'manual_seo_update'));
         add_action('admin_init', array($this, 'maybe_upgrade_db'));
+
+        // Saves must run before the admin header is emitted. Handling them
+        // inside the page callback means wp_safe_redirect() is called after
+        // output has already started, so the Location header is dropped and the
+        // bare exit truncates the page — which renders as a blank screen.
+        add_action('admin_init', array($this, 'maybe_save_settings'));
 
         // REST API, so the plugin can be driven by MCP clients and other automation
         add_action('rest_api_init', array($this, 'register_rest_routes'));
@@ -1040,13 +1046,29 @@ class AutoSEOManager {
         wp_enqueue_script('jquery');
     }
     
-    public function admin_page() {
-        // Handle form submission before loading the page
-        if (isset($_POST['submit']) && isset($_POST['tab'])) {
-            $this->save_settings();
-            return; // save_settings will redirect
+    /**
+     * Handle a settings POST on admin_init, before anything is rendered.
+     */
+    public function maybe_save_settings() {
+        if (empty($_POST['submit']) || empty($_POST['tab'])) {
+            return;
         }
-        
+
+        // Only our own screen. Other admin pages post 'submit' constantly.
+        $page = isset($_REQUEST['page']) ? sanitize_key($_REQUEST['page']) : '';
+
+        if ('auto-seo-manager' !== $page) {
+            return;
+        }
+
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        $this->save_settings();
+    }
+
+    public function admin_page() {
         include plugin_dir_path(__FILE__) . 'admin-page.php';
     }
     
