@@ -98,11 +98,16 @@ $tabs = array(
         <div class="nyx-alert is-good">Settings saved.</div>
     <?php endif; ?>
 
-    <nav class="nyx-tabs" aria-label="Yoast SEO Addons sections">
+    <nav class="nyx-tabs" role="tablist" aria-label="Yoast SEO Addons sections">
         <?php foreach ($tabs as $slug => $meta) : ?>
-            <a class="nyx-tab <?php echo $current_tab === $slug ? 'is-active' : ''; ?>"
-               href="<?php echo esc_url(AutoSEOManager::admin_url_for($slug)); ?>"
-               <?php echo $current_tab === $slug ? 'aria-current="page"' : ''; ?>>
+            <?php $is_on = $current_tab === $slug; ?>
+            <a class="nyx-tab <?php echo $is_on ? 'is-active' : ''; ?>"
+               id="nyx-tab-<?php echo esc_attr($slug); ?>"
+               data-nyx-tab="<?php echo esc_attr($slug); ?>"
+               role="tab"
+               aria-controls="nyx-panel-<?php echo esc_attr($slug); ?>"
+               aria-selected="<?php echo $is_on ? 'true' : 'false'; ?>"
+               href="<?php echo esc_url(AutoSEOManager::admin_url_for($slug)); ?>">
                 <span class="dashicons dashicons-<?php echo esc_attr($meta[1]); ?>"></span>
                 <?php echo esc_html($meta[0]); ?>
             </a>
@@ -110,7 +115,8 @@ $tabs = array(
     </nav>
 
     <?php // ---------------------------------------------------------- SETTINGS ?>
-    <?php if ('settings' === $current_tab) : ?>
+    <div class="nyx-panel" id="nyx-panel-settings" role="tabpanel" aria-labelledby="nyx-tab-settings"
+         <?php echo 'settings' === $current_tab ? '' : 'hidden'; ?>>
     <form method="post" action="<?php echo esc_url(AutoSEOManager::admin_url_for('settings')); ?>">
         <?php wp_nonce_field('save_auto_seo_settings', 'auto_seo_nonce'); ?>
         <input type="hidden" name="tab" value="settings">
@@ -270,10 +276,11 @@ $tabs = array(
             <button type="submit" name="submit" class="nyx-btn is-primary">Save settings</button>
         </div>
     </form>
-    <?php endif; ?>
+    </div><?php // /settings ?>
 
     <?php // ------------------------------------------------------ INTEGRATIONS ?>
-    <?php if ('integrations' === $current_tab) : ?>
+    <div class="nyx-panel" id="nyx-panel-integrations" role="tabpanel" aria-labelledby="nyx-tab-integrations"
+         <?php echo 'integrations' === $current_tab ? '' : 'hidden'; ?>>
     <form method="post" action="<?php echo esc_url(AutoSEOManager::admin_url_for('integrations')); ?>">
         <?php wp_nonce_field('save_auto_seo_settings', 'auto_seo_nonce'); ?>
         <input type="hidden" name="tab" value="integrations">
@@ -329,10 +336,11 @@ $tabs = array(
             <button type="submit" name="submit" class="nyx-btn is-primary">Save integrations</button>
         </div>
     </form>
-    <?php endif; ?>
+    </div><?php // /integrations ?>
 
     <?php // -------------------------------------------------------------- LOGS ?>
-    <?php if ('logs' === $current_tab) : ?>
+    <div class="nyx-panel" id="nyx-panel-logs" role="tabpanel" aria-labelledby="nyx-tab-logs"
+         <?php echo 'logs' === $current_tab ? '' : 'hidden'; ?>>
 
     <div class="nyx-stats">
         <div class="nyx-stat">
@@ -458,10 +466,11 @@ $tabs = array(
             </div>
         <?php endif; ?>
     </section>
-    <?php endif; ?>
+    </div><?php // /logs ?>
 
     <?php // ------------------------------------------------------------- TOOLS ?>
-    <?php if ('tools' === $current_tab) : ?>
+    <div class="nyx-panel" id="nyx-panel-tools" role="tabpanel" aria-labelledby="nyx-tab-tools"
+         <?php echo 'tools' === $current_tab ? '' : 'hidden'; ?>>
     <div class="nyx-grid">
 
         <section class="nyx-card">
@@ -550,7 +559,7 @@ $tabs = array(
         });
     })();
     </script>
-    <?php endif; ?>
+    </div><?php // /tools ?>
 
 </div>
 
@@ -572,7 +581,7 @@ $tabs = array(
     --nyx-base:      #F3F3F1;
     --nyx-r-card:    14px;
     --nyx-r-sm:      7px;
-    --nyx-r-tab:     17px;
+    --nyx-r-tab:     999px;
 
     max-width: 1180px;
     color: var(--nyx-ink);
@@ -798,6 +807,10 @@ $tabs = array(
 .nyx-btn.is-danger { color: var(--nyx-danger); border-color: #E7BDBA; }
 .nyx-btn.is-danger:hover { background: #FDEDED; color: var(--nyx-danger); border-color: var(--nyx-danger); }
 .nyx-btn:disabled { opacity: .55; cursor: default; }
+.nyx-tab:active, .nyx-btn:not(:disabled):active { transform: translateY(1px); }
+.nyx-tab, .nyx-btn { transition: background .12s ease, border-color .12s ease, color .12s ease, transform .06s ease; }
+@media (prefers-reduced-motion: reduce) { .nyx-tab, .nyx-btn { transition: none; } .nyx-tab:active, .nyx-btn:active { transform: none; } }
+.nyx-panel[hidden] { display: none; }
 
 .nyx-run-status { margin-left: 12px; font-size: 13px; color: var(--nyx-muted); }
 .nyx-run-status.is-good { color: var(--nyx-success); }
@@ -810,3 +823,85 @@ $tabs = array(
 .nyx-empty { color: var(--nyx-faint); margin: 0; }
 .nyx code { background: var(--nyx-sunken); border-radius: 4px; padding: 1px 5px; font-size: 12px; }
 </style>
+
+<script>
+/**
+ * Client-side tab switching.
+ *
+ * Every panel is rendered server-side, so switching is a class toggle rather
+ * than a page load. The links keep their real href: without JavaScript they
+ * still navigate, and the server still honours ?tab=, so the no-JS path and
+ * the bookmarked-URL path both keep working.
+ */
+(function () {
+    var nav = document.querySelector('.nyx-tabs');
+    if (!nav) { return; }
+
+    var tabs   = Array.prototype.slice.call(nav.querySelectorAll('[data-nyx-tab]'));
+    var panels = {};
+    tabs.forEach(function (t) {
+        var slug = t.getAttribute('data-nyx-tab');
+        panels[slug] = document.getElementById('nyx-panel-' + slug);
+    });
+
+    function show(slug, push) {
+        if (!panels[slug]) { return false; }
+
+        tabs.forEach(function (t) {
+            var on = t.getAttribute('data-nyx-tab') === slug;
+            t.classList.toggle('is-active', on);
+            t.setAttribute('aria-selected', on ? 'true' : 'false');
+            // A tab is reachable with the arrow keys; only the selected one
+            // stays in the Tab order, which is what a tablist should do.
+            t.setAttribute('tabindex', on ? '0' : '-1');
+        });
+
+        Object.keys(panels).forEach(function (k) {
+            if (panels[k]) { panels[k].hidden = (k !== slug); }
+        });
+
+        if (push) {
+            var t = tabs.filter(function (x) { return x.getAttribute('data-nyx-tab') === slug; })[0];
+            if (t && window.history && history.pushState) {
+                history.pushState({ nyxTab: slug }, '', t.getAttribute('href'));
+            }
+        }
+        return true;
+    }
+
+    nav.addEventListener('click', function (e) {
+        var link = e.target.closest ? e.target.closest('[data-nyx-tab]') : null;
+        if (!link) { return; }
+        // Let modified clicks open a new tab the way any link would.
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) { return; }
+        if (show(link.getAttribute('data-nyx-tab'), true)) { e.preventDefault(); }
+    });
+
+    nav.addEventListener('keydown', function (e) {
+        var i = tabs.indexOf(document.activeElement);
+        if (i === -1) { return; }
+        var next = null;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { next = tabs[(i + 1) % tabs.length]; }
+        if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { next = tabs[(i - 1 + tabs.length) % tabs.length]; }
+        if (e.key === 'Home') { next = tabs[0]; }
+        if (e.key === 'End')  { next = tabs[tabs.length - 1]; }
+        if (!next) { return; }
+        e.preventDefault();
+        next.focus();
+        show(next.getAttribute('data-nyx-tab'), true);
+    });
+
+    window.addEventListener('popstate', function (e) {
+        var slug = (e.state && e.state.nyxTab) || null;
+        if (!slug) {
+            var m = window.location.search.match(/[?&]tab=([a-z_]+)/);
+            slug = m ? m[1] : 'settings';
+        }
+        show(slug, false);
+    });
+
+    tabs.forEach(function (t) {
+        t.setAttribute('tabindex', t.classList.contains('is-active') ? '0' : '-1');
+    });
+}());
+</script>
