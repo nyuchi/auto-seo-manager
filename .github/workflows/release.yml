@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build, e.g. v1.3.0'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          coverage: none
+
+      - name: Syntax check
+        run: |
+          set -e
+          find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l > /dev/null
+
+      - name: Read the version
+        id: v
+        run: |
+          set -e
+          version=$(grep -m1 "define('AUTO_SEO_VERSION'" auto-seo-manager.php | sed -E "s/.*'([0-9.]+)'.*/\1/")
+          tag="${GITHUB_REF_NAME:-${{ github.event.inputs.tag }}}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          # A tag disagreeing with the code produces a release users cannot
+          # trust, so refuse rather than publish a mislabelled zip.
+          if [ "v$version" != "$tag" ]; then
+            echo "::error::Tag $tag does not match AUTO_SEO_VERSION $version"
+            exit 1
+          fi
+
+      - name: Build the plugin zip
+        run: |
+          set -e
+          # This MUST match the directory the plugin is installed into. The
+          # display name changed to "Nyuchi WordPress Optimization" but the
+          # folder did not, and WordPress identifies a plugin by its path - a
+          # zip with any other folder name installs a second copy alongside the
+          # existing one instead of updating it.
+          slug=auto-seo-manager
+          rm -rf build && mkdir -p "build/$slug"
+          rsync -a ./ "build/$slug/" \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude '.claude' \
+            --exclude 'build' \
+            --exclude '.gitignore' \
+            --exclude '.markdownlint-cli2.jsonc' \
+            --exclude '.prettierignore' \
+            --exclude '.prettierrc.json' \
+            --exclude '.yamllint.yml' \
+            --exclude '.DS_Store' \
+            --exclude 'CHANGELOG.md' \
+            --exclude 'CONTRIBUTING.md' \
+            --exclude 'installation-guide.md'
+          cd build && zip -qr "../$slug.zip" "$slug"
+          cd .. && unzip -l "$slug.zip" | tail -3
+
+      - name: Publish the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.v.outputs.tag }}
+          name: Nyuchi WordPress Optimization ${{ steps.v.outputs.version }}
+          generate_release_notes: true
+          files: auto-seo-manager.zip
