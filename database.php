@@ -26,8 +26,8 @@ if (!defined('ABSPATH')) {
 
 class AutoSEODatabase {
 
-    const CATEGORY = 'nyuchi-seo';
-    const PREFIX   = 'nyuchi-seo/';
+    const CATEGORY = 'nyuchi-optimization';
+    const PREFIX   = 'nyuchi-optimization/';
 
     /**
      * Hard ceiling on rows removed in a single call.

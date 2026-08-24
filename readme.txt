@@ -4,7 +4,7 @@ Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,12 @@ Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
 == Changelog ==
+
+= 1.2.3 =
+* Abilities moved from the nyuchi-seo namespace to nyuchi-optimization, so the
+  names match what the plugin now is. This renames every ability: anything
+  calling nyuchi-seo/get-status needs updating to nyuchi-optimization/get-status.
+  Done now, while the only consumer is a single site, rather than later.
 
 = 1.2.2 =
 * Fixed settings not saving. Moving the save to admin_init in 1.1.0 introduced

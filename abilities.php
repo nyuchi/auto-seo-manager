@@ -31,12 +31,12 @@ class AutoSEOAbilities {
     /**
      * Category slug every ability below is filed under.
      */
-    const CATEGORY = 'nyuchi-seo';
+    const CATEGORY = 'nyuchi-optimization';
 
     /**
      * Ability name prefix. The Abilities API requires namespace/ability-name.
      */
-    const PREFIX = 'nyuchi-seo/';
+    const PREFIX = 'nyuchi-optimization/';
 
     /**
      * The running AutoSEOManager instance.
@@ -74,8 +74,8 @@ class AutoSEOAbilities {
         wp_register_ability_category(
             self::CATEGORY,
             array(
-                'label'       => 'Nyuchi SEO',
-                'description' => 'Automated generation of Yoast SEO fields - titles, meta descriptions, focus keywords, Open Graph and Twitter card tags - across the site, plus the activity log recording every field the automation has written.',
+                'label'       => 'Nyuchi WordPress Optimization',
+                'description' => 'Site optimization in three parts. SEO: automated generation of Yoast SEO fields - titles, meta descriptions, focus keywords, Open Graph and Twitter card tags - with an activity log of every field written. Metadata: inspection and correction across post types. Database: per-table size and overhead, counts of rows nothing reads any more, the autoloaded options paid for on every request, and bounded cleanup of each.',
             )
         );
     }
@@ -126,7 +126,7 @@ class AutoSEOAbilities {
      * ------------------------------------------------------------------ */
 
     /**
-     * nyuchi-seo/get-status
+     * nyuchi-optimization/get-status
      */
     private function register_get_status() {
         $this->register(
@@ -216,7 +216,7 @@ class AutoSEOAbilities {
     }
 
     /**
-     * nyuchi-seo/get-settings
+     * nyuchi-optimization/get-settings
      */
     private function register_get_settings() {
         $this->register(
@@ -258,7 +258,7 @@ class AutoSEOAbilities {
     }
 
     /**
-     * nyuchi-seo/update-settings
+     * nyuchi-optimization/update-settings
      */
     private function register_update_settings() {
         $this->register(
@@ -297,7 +297,7 @@ class AutoSEOAbilities {
     }
 
     /**
-     * nyuchi-seo/generate-seo
+     * nyuchi-optimization/generate-seo
      */
     private function register_generate_seo() {
         $this->register(
@@ -344,7 +344,7 @@ class AutoSEOAbilities {
     }
 
     /**
-     * nyuchi-seo/get-activity-log
+     * nyuchi-optimization/get-activity-log
      */
     private function register_get_activity_log() {
         $this->register(
@@ -416,7 +416,7 @@ class AutoSEOAbilities {
     }
 
     /**
-     * nyuchi-seo/prune-activity-log
+     * nyuchi-optimization/prune-activity-log
      */
     private function register_prune_activity_log() {
         $this->register(
