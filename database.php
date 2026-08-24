@@ -60,6 +60,9 @@ class AutoSEODatabase {
         $this->register_orphans();
         $this->register_autoload();
         $this->register_cleanup();
+        $this->register_orphaned_tables();
+        $this->register_orphaned_cron();
+        $this->register_optimize();
     }
 
     /* ---------------------------------------------------------------------
@@ -449,6 +452,327 @@ class AutoSEODatabase {
                 $dry = !isset($input['dry_run']) || (bool) $input['dry_run'];
 
                 return $this->cleanup($targets, $dry);
+            },
+        ));
+    }
+
+    /* ---------------------------------------------------------------------
+     * Debris from plugins that are no longer installed
+     * ------------------------------------------------------------------ */
+
+    /**
+     * Slugs of every plugin present on disk, active or not.
+     *
+     * Presence on disk is the right test rather than being active: a
+     * deactivated plugin still owns its tables and will want them back when it
+     * is switched on again.
+     *
+     * @return string[]
+     */
+    protected function installed_slugs() {
+        if (!function_exists('get_plugins')) {
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
+
+        $slugs = array();
+
+        foreach (array_keys(get_plugins()) as $file) {
+            $slugs[] = dirname($file);
+            $slugs[] = basename($file, '.php');
+        }
+
+        $slugs[] = 'wp';
+        $slugs[] = substr($GLOBALS['wpdb']->prefix, 0, -1);
+
+        return array_values(array_unique(array_filter($slugs, function ($s) {
+            return $s !== '.' && $s !== '';
+        })));
+    }
+
+    /**
+     * Tables that no installed plugin appears to claim.
+     *
+     * Attribution is a guess and is presented as one. A table is matched to a
+     * plugin by comparing the part of its name after the WordPress prefix
+     * against installed plugin slugs, with underscores and hyphens treated as
+     * the same character because plugins are inconsistent about which they use.
+     * That heuristic has no way to recognise a table whose name resembles
+     * nothing in its plugin's slug, so this reports candidates for a human to
+     * confirm and never drops anything on its own.
+     *
+     * @return array
+     */
+    public function orphaned_tables() {
+        global $wpdb;
+
+        $core = array(
+            'posts', 'postmeta', 'comments', 'commentmeta', 'terms', 'termmeta',
+            'term_taxonomy', 'term_relationships', 'users', 'usermeta', 'options',
+            'links', 'blogs', 'blogmeta', 'site', 'sitemeta', 'signups',
+            'registration_log', 'blog_versions',
+        );
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT table_name, table_rows, data_length + index_length AS bytes
+                   FROM information_schema.TABLES
+                  WHERE table_schema = %s',
+                DB_NAME
+            ),
+            ARRAY_A
+        );
+
+        if (!is_array($rows)) {
+            return array('error' => 'information_schema is not readable by this database user.');
+        }
+
+        $slugs   = $this->installed_slugs();
+        $norm    = function ($v) {
+            return str_replace(array('-', '_'), '', strtolower($v));
+        };
+        $nslugs  = array_map($norm, $slugs);
+        $prefix  = $wpdb->prefix;
+        $unknown = array();
+        $known   = 0;
+
+        foreach ($rows as $r) {
+            $name = $r['table_name'];
+
+            if (strpos($name, $prefix) !== 0) {
+                // A table outside this install's prefix belongs to another
+                // install sharing the database. Not ours to judge.
+                $unknown[] = array(
+                    'table'       => $name,
+                    'size_mb'     => round((int) $r['bytes'] / 1048576, 2),
+                    'rows_approx' => (int) $r['table_rows'],
+                    'reason'      => 'Outside this install\'s table prefix - may belong to another WordPress install.',
+                );
+                continue;
+            }
+
+            $bare = substr($name, strlen($prefix));
+
+            if (in_array($bare, $core, true)) {
+                $known++;
+                continue;
+            }
+
+            $nbare   = $norm($bare);
+            $matched = false;
+
+            foreach ($nslugs as $ns) {
+                if (strlen($ns) > 3 && (strpos($nbare, $ns) !== false || strpos($ns, $nbare) !== false)) {
+                    $matched = true;
+                    break;
+                }
+            }
+
+            if ($matched) {
+                $known++;
+                continue;
+            }
+
+            $unknown[] = array(
+                'table'       => $name,
+                'size_mb'     => round((int) $r['bytes'] / 1048576, 2),
+                'rows_approx' => (int) $r['table_rows'],
+                'reason'      => 'No installed plugin has a slug resembling this table name.',
+            );
+        }
+
+        usort($unknown, function ($a, $b) {
+            return $b['size_mb'] <=> $a['size_mb'];
+        });
+
+        return array
+        (
+            'attributed'   => $known,
+            'unattributed' => $unknown,
+            'reclaimable_mb' => round(array_sum(array_column($unknown, 'size_mb')), 2),
+            'note' => 'Candidates only. Attribution is a name heuristic, so confirm a table really is unused before dropping it - some plugins name tables nothing like their slug.',
+        );
+    }
+
+    /**
+     * Scheduled events whose hook currently has no listener.
+     *
+     * WordPress keeps running a cron event long after the plugin that scheduled
+     * it is gone, firing a hook nothing answers on every cron pass.
+     *
+     * The check has a real limitation and it is stated in the output rather
+     * than buried: plugins commonly register their hooks conditionally, so a
+     * hook can legitimately have no callback in this request and a perfectly
+     * good one during the request that actually runs it. Treat the result as a
+     * shortlist to check, not a verdict.
+     *
+     * @return array
+     */
+    public function orphaned_cron() {
+        $cron = get_option('cron');
+
+        if (!is_array($cron)) {
+            return array('events' => array(), 'note' => 'No cron array is stored.');
+        }
+
+        global $wp_filter;
+
+        $listed = array();
+        $total  = 0;
+
+        foreach ($cron as $ts => $hooks) {
+            if (!is_array($hooks)) {
+                continue;
+            }
+
+            foreach ($hooks as $hook => $sigs) {
+                if (!is_array($sigs)) {
+                    continue;
+                }
+
+                $total += count($sigs);
+
+                if (isset($wp_filter[$hook]) && !empty($wp_filter[$hook]->callbacks)) {
+                    continue;
+                }
+
+                if (!isset($listed[$hook])) {
+                    $listed[$hook] = array(
+                        'hook'      => $hook,
+                        'scheduled' => 0,
+                        'next_run'  => is_numeric($ts) ? gmdate('c', (int) $ts) : (string) $ts,
+                    );
+                }
+
+                $listed[$hook]['scheduled'] += count($sigs);
+            }
+        }
+
+        return array(
+            'total_events'      => $total,
+            'without_listener'  => array_values($listed),
+            'note'              => 'A hook with no listener in this request is not proof it is dead - plugins register hooks conditionally. Check each against the plugins you have removed before unscheduling it.',
+        );
+    }
+
+    /**
+     * Rebuild tables to reclaim the overhead reported by db-overview.
+     *
+     * @param string[] $tables Table names, or empty for every table with overhead.
+     * @return array
+     */
+    public function optimize($tables = array()) {
+        global $wpdb;
+
+        $all = $wpdb->get_results(
+            $wpdb->prepare(
+                'SELECT table_name, data_free, engine FROM information_schema.TABLES WHERE table_schema = %s',
+                DB_NAME
+            ),
+            ARRAY_A
+        );
+
+        $valid = array();
+
+        foreach ((array) $all as $r) {
+            $valid[$r['table_name']] = $r;
+        }
+
+        if (empty($tables)) {
+            $tables = array();
+
+            foreach ($valid as $name => $r) {
+                if ((int) $r['data_free'] > 1048576) {
+                    $tables[] = $name;
+                }
+            }
+        }
+
+        $done = array();
+
+        foreach ((array) $tables as $t) {
+            // Only ever touch a table this database actually reports. The name
+            // goes into the statement unescaped because MySQL will not accept a
+            // placeholder for an identifier, so it has to be one we looked up
+            // rather than one that was handed to us.
+            if (!isset($valid[$t])) {
+                $done[] = array('table' => $t, 'result' => 'skipped - not a table in this database');
+                continue;
+            }
+
+            $before = (int) $valid[$t]['data_free'];
+            $wpdb->query("OPTIMIZE TABLE `" . str_replace('`', '', $t) . "`");
+
+            $after = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    'SELECT data_free FROM information_schema.TABLES WHERE table_schema = %s AND table_name = %s',
+                    DB_NAME,
+                    $t
+                )
+            );
+
+            $done[] = array(
+                'table'       => $t,
+                'engine'      => $valid[$t]['engine'],
+                'freed_mb'    => round(max(0, $before - $after) / 1048576, 2),
+                'result'      => 'optimized',
+            );
+        }
+
+        return array(
+            'tables' => $done,
+            'freed_mb_total' => round(array_sum(array_column($done, 'freed_mb')), 2),
+            'note' => 'InnoDB has no true OPTIMIZE - MySQL rebuilds the table instead, which locks it for the duration. Run it when the site is quiet, not mid-campaign.',
+        );
+    }
+
+    private function register_orphaned_tables() {
+        $this->register(self::PREFIX . 'db-orphaned-tables', array(
+            'label'       => 'Tables no installed plugin claims',
+            'description' => 'List database tables that cannot be attributed to any plugin present on disk, largest first, with the space they occupy. Read-only. Attribution is a name heuristic, so these are candidates to verify rather than a list to delete blindly.',
+            'category'    => self::CATEGORY,
+            'input_schema' => array('type' => 'object', 'properties' => array(), 'additionalProperties' => false),
+            'output_schema' => array('type' => 'object'),
+            'permission_callback' => array($this, 'can_manage'),
+            'execute_callback'    => function () {
+                return $this->orphaned_tables();
+            },
+        ));
+    }
+
+    private function register_orphaned_cron() {
+        $this->register(self::PREFIX . 'db-orphaned-cron', array(
+            'label'       => 'Scheduled events with no listener',
+            'description' => 'List cron events whose hook has no callback registered, which is what a plugin leaves behind when it is deleted without unscheduling its jobs. Read-only. Plugins register hooks conditionally, so verify before unscheduling.',
+            'category'    => self::CATEGORY,
+            'input_schema' => array('type' => 'object', 'properties' => array(), 'additionalProperties' => false),
+            'output_schema' => array('type' => 'object'),
+            'permission_callback' => array($this, 'can_manage'),
+            'execute_callback'    => function () {
+                return $this->orphaned_cron();
+            },
+        ));
+    }
+
+    private function register_optimize() {
+        $this->register(self::PREFIX . 'db-optimize', array(
+            'label'       => 'Reclaim table overhead',
+            'description' => 'Run OPTIMIZE TABLE to reclaim the overhead db-overview reports. With no tables named, optimizes every table holding more than a megabyte of it. This locks each table while it rebuilds, so run it when the site is quiet.',
+            'category'    => self::CATEGORY,
+            'input_schema' => array(
+                'type'       => 'object',
+                'properties' => array(
+                    'tables' => array(
+                        'type'        => 'array',
+                        'items'       => array('type' => 'string'),
+                        'description' => 'Table names. Omit to optimize every table with over 1 MB of overhead.',
+                    ),
+                ),
+                'additionalProperties' => false,
+            ),
+            'output_schema' => array('type' => 'object'),
+            'permission_callback' => array($this, 'can_manage'),
+            'execute_callback'    => function ($input) {
+                return $this->optimize(isset($input['tables']) ? (array) $input['tables'] : array());
             },
         ));
     }

@@ -4,7 +4,7 @@ Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,17 @@ Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
 == Changelog ==
+
+= 1.2.1 =
+* Three more database abilities, which together are what a dedicated cleaner
+  plugin is usually installed for: tables that no plugin on disk appears to
+  claim, scheduled events whose hook has no listener, and OPTIMIZE TABLE to
+  reclaim the overhead the size report shows.
+* Both detections are reported as candidates rather than verdicts. Table
+  attribution is a name heuristic and some plugins name tables nothing like
+  their slug; cron hooks are frequently registered conditionally, so a hook
+  with no listener in one request may have a perfectly good one in another.
+  Neither removes anything on its own.
 
 = 1.2.0 =
 * Renamed to Nyuchi WordPress Optimization. The plugin had grown past
