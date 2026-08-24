@@ -4,7 +4,7 @@ Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,18 @@ Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
 == Changelog ==
+
+= 1.2.2 =
+* Fixed settings not saving. Moving the save to admin_init in 1.1.0 introduced
+  a guard that tested the submit field with empty(). The save buttons carry a
+  name but no value, so a browser submits an empty string, which empty() reads
+  as absent - every save from Settings, Integrations and Logs was discarded
+  before anything was written. Tools was unaffected because it posts a hidden
+  submit=1, which is why the failure looked partial rather than total.
+* Selected post types are now checked against the registered types before
+  being stored. The submitted array went straight into the option, and every
+  later read hands it to WP_Query, where an unregistered type returns nothing
+  at all rather than raising an error.
 
 = 1.2.1 =
 * Three more database abilities, which together are what a dedicated cleaner

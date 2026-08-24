@@ -3,7 +3,7 @@
  * Plugin Name: Nyuchi WordPress Optimization
  * Plugin URI: https://github.com/nyuchi/auto-seo-manager
  * Description: SEO, metadata, and database cleaning and editing. Automates Yoast SEO fields, reports what is costing the database, and exposes the lot to the REST API and to MCP clients. By Nyuchi Web Services.
- * Version: 1.2.1
+ * Version: 1.2.2
  * Author: Nyuchi Web Services
  * Author URI: https://nyuchi.com
  * Developer: Bryan Fawcett (@bryanfawcett)
@@ -25,7 +25,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AUTO_SEO_VERSION', '1.2.1');
+define('AUTO_SEO_VERSION', '1.2.2');
 define('AUTO_SEO_DB_VERSION', 2);
 
 class AutoSEOManager {
@@ -1050,7 +1050,12 @@ class AutoSEOManager {
      * Handle a settings POST on admin_init, before anything is rendered.
      */
     public function maybe_save_settings() {
-        if (empty($_POST['submit']) || empty($_POST['tab'])) {
+        // isset(), not empty(). The save buttons carry a name but no value, so
+        // a browser submits submit="" - an empty string, which empty() treats
+        // as absent. Testing with empty() here silently discarded every save
+        // from the Settings, Integrations and Logs tabs while Tools, which
+        // posts a hidden submit=1, carried on working.
+        if (!isset($_POST['submit']) || !isset($_POST['tab'])) {
             return;
         }
 
@@ -1099,11 +1104,45 @@ class AutoSEOManager {
         exit;
     }
     
+    /**
+     * Reduce submitted post types to ones that actually exist.
+     *
+     * The raw array was previously written straight to the option. Every later
+     * read feeds it to WP_Query as a post_type, so a value that is not a
+     * registered type produces an empty result set rather than an error, and
+     * the cause is invisible from the admin.
+     *
+     * @param mixed $raw Submitted value.
+     * @return string[]
+     */
+    private function sanitize_post_types($raw) {
+        if (!is_array($raw)) {
+            return array();
+        }
+
+        $registered = get_post_types(array(), 'names');
+        $clean      = array();
+
+        foreach ($raw as $type) {
+            if (!is_string($type)) {
+                continue;
+            }
+
+            $type = sanitize_key($type);
+
+            if ($type !== '' && isset($registered[$type])) {
+                $clean[] = $type;
+            }
+        }
+
+        return array_values(array_unique($clean));
+    }
+
     private function save_basic_settings() {
         // Basic settings
         $basic_settings = array(
             'enabled' => isset($_POST['auto_seo_enabled']) ? 1 : 0,
-            'post_types' => isset($_POST['post_types']) ? $_POST['post_types'] : array(),
+            'post_types' => $this->sanitize_post_types(isset($_POST['post_types']) ? $_POST['post_types'] : array()),
             'auto_meta_description' => isset($_POST['auto_meta_description']) ? 1 : 0,
             'auto_focus_keywords' => isset($_POST['auto_focus_keywords']) ? 1 : 0,
             'audit_email' => isset($_POST['audit_email']) ? sanitize_email($_POST['audit_email']) : '',

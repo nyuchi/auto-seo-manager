@@ -273,7 +273,7 @@ $tabs = array(
         </div>
 
         <div class="nyx-actions">
-            <button type="submit" name="submit" class="nyx-btn is-primary">Save settings</button>
+            <button type="submit" name="submit" value="1" class="nyx-btn is-primary">Save settings</button>
         </div>
     </form>
     </div><?php // /settings ?>
@@ -333,7 +333,7 @@ $tabs = array(
         </div>
 
         <div class="nyx-actions">
-            <button type="submit" name="submit" class="nyx-btn is-primary">Save integrations</button>
+            <button type="submit" name="submit" value="1" class="nyx-btn is-primary">Save integrations</button>
         </div>
     </form>
     </div><?php // /integrations ?>
@@ -413,7 +413,7 @@ $tabs = array(
                 'Prune automatically each day', 'Applies both limits above on a daily cron.'); ?>
 
             <div class="nyx-actions is-inline">
-                <button type="submit" name="submit" class="nyx-btn is-primary">Save logging</button>
+                <button type="submit" name="submit" value="1" class="nyx-btn is-primary">Save logging</button>
                 <button type="submit" name="prune_log_now" value="1" class="nyx-btn">Prune now</button>
                 <button type="submit" name="purge_log_now" value="1" class="nyx-btn is-danger"
                         onclick="return confirm('Delete every log entry? This cannot be undone.');">
