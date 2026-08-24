@@ -1632,3 +1632,15 @@ if (file_exists($auto_seo_abilities_file)) {
         new AutoSEOAbilities($auto_seo_manager);
     }
 }
+
+// Database diagnostics and cleanup. Counting is read-only; deletion defaults to
+// a dry run and has to be asked for explicitly. Loaded alongside the abilities
+// above so the whole surface appears together, or not at all.
+$auto_seo_database_file = plugin_dir_path(__FILE__) . 'database.php';
+if (file_exists($auto_seo_database_file)) {
+    require_once $auto_seo_database_file;
+
+    if (class_exists('AutoSEODatabase')) {
+        new AutoSEODatabase();
+    }
+}
