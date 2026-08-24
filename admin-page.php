@@ -27,6 +27,12 @@ $recent_logs        = $this->get_log_entries(25);
 $integrations       = $this->get_available_integrations();
 
 $settings_updated = false;
+$db_notice = get_transient('auto_seo_db_notice');
+
+if ($db_notice) {
+    delete_transient('auto_seo_db_notice');
+}
+
 if (get_transient('auto_seo_settings_saved')) {
     $settings_updated = true;
     delete_transient('auto_seo_settings_saved');
@@ -57,7 +63,14 @@ $tabs = array(
     'integrations' => array('Integrations', 'admin-plugins'),
     'logs'         => array('Activity Log', 'list-view'),
     'tools'        => array('Tools', 'admin-tools'),
+    'database'     => array('Database', 'database'),
 );
+
+// The database module is optional; without it the tab has nothing to show, so
+// it is not offered rather than opening onto an empty panel.
+if (!class_exists('AutoSEODatabase')) {
+    unset($tabs['database']);
+}
 ?>
 
 <div class="wrap nyx">
@@ -96,6 +109,10 @@ $tabs = array(
 
     <?php if ($settings_updated) : ?>
         <div class="nyx-alert is-good">Settings saved.</div>
+    <?php endif; ?>
+
+    <?php if ($db_notice) : ?>
+        <div class="nyx-alert is-good"><?php echo esc_html($db_notice); ?></div>
     <?php endif; ?>
 
     <nav class="nyx-tabs" role="tablist" aria-label="Optimization sections">
@@ -561,6 +578,98 @@ $tabs = array(
     </script>
     </div><?php // /tools ?>
 
+    <?php // ---------------------------------------------------------- DATABASE ?>
+    <?php if (isset($tabs['database'])) :
+        $db        = new AutoSEODatabase();
+        $tables    = $db->table_report();
+        $orphans   = $db->orphan_report();
+        $autoload  = $db->autoload_report(12);
+    ?>
+    <div class="nyx-panel" id="nyx-panel-database" role="tabpanel" aria-labelledby="nyx-tab-database"
+         <?php echo 'database' === $current_tab ? '' : 'hidden'; ?>>
+
+        <div class="nyx-stats">
+            <div class="nyx-stat">
+                <span class="nyx-stat-n"><?php echo esc_html(number_format((float) ($tables['total_size_mb'] ?? 0), 1)); ?> MB</span>
+                <span class="nyx-stat-l">Database size</span>
+            </div>
+            <div class="nyx-stat">
+                <span class="nyx-stat-n"><?php echo esc_html(number_format((float) ($tables['overhead_mb'] ?? 0), 1)); ?> MB</span>
+                <span class="nyx-stat-l">Reclaimable overhead</span>
+            </div>
+            <div class="nyx-stat">
+                <span class="nyx-stat-n"><?php echo esc_html(number_format((float) ($autoload['autoloaded_kb'] ?? 0), 1)); ?> KB</span>
+                <span class="nyx-stat-l">Autoloaded, every request</span>
+            </div>
+            <div class="nyx-stat">
+                <span class="nyx-stat-n"><?php echo esc_html(number_format((int) ($orphans['total_rows'] ?? 0))); ?></span>
+                <span class="nyx-stat-l">Rows nothing reads</span>
+            </div>
+        </div>
+
+        <form method="post" action="<?php echo esc_url(AutoSEOManager::admin_url_for('database')); ?>">
+            <?php wp_nonce_field('save_auto_seo_settings', 'auto_seo_nonce'); ?>
+            <input type="hidden" name="tab" value="database">
+
+            <div class="nyx-card nyx-span-2">
+                <h3 class="nyx-card-h">Rows nothing reads any more</h3>
+                <p class="nyx-card-sub">Tick what to remove. Deletion is capped per run, so a large backlog needs the button pressing more than once - the count updates each time.</p>
+                <div class="nyx-checks">
+                    <?php foreach (($orphans['targets'] ?? array()) as $key => $t) :
+                        $n = (int) $t['rows']; ?>
+                        <label class="nyx-check">
+                            <input type="checkbox" name="db_targets[]" value="<?php echo esc_attr($key); ?>"
+                                   <?php disabled(0 === $n); ?>>
+                            <span><?php echo esc_html($t['label']); ?>
+                                <code><?php echo esc_html(number_format($n)); ?></code></span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+                <p style="margin-top:14px">
+                    <button type="submit" name="submit" value="1" class="nyx-btn is-danger">Delete selected rows</button>
+                    <button type="submit" name="db_optimize" value="1" class="nyx-btn">Reclaim table overhead</button>
+                </p>
+                <p class="nyx-card-sub">Reclaiming overhead rebuilds each table, which locks it while it runs. Do it when the site is quiet.</p>
+            </div>
+
+            <div class="nyx-grid" style="margin-top:18px">
+                <div class="nyx-card">
+                    <h3 class="nyx-card-h">Largest autoloaded options</h3>
+                    <p class="nyx-card-sub">Read on every request, including REST and admin-ajax. Usually the most valuable thing on this screen.</p>
+                    <div class="nyx-tablewrap">
+                        <table class="nyx-table">
+                            <thead><tr><th>Option</th><th>Size</th></tr></thead>
+                            <tbody>
+                            <?php foreach (($autoload['largest'] ?? array()) as $o) : ?>
+                                <tr><td><code><?php echo esc_html($o['option']); ?></code></td>
+                                    <td><?php echo esc_html($o['kb']); ?> KB</td></tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="nyx-card">
+                    <h3 class="nyx-card-h">Largest tables</h3>
+                    <p class="nyx-card-sub">Row counts are InnoDB estimates, not exact.</p>
+                    <div class="nyx-tablewrap">
+                        <table class="nyx-table">
+                            <thead><tr><th>Table</th><th>Size</th><th>Overhead</th></tr></thead>
+                            <tbody>
+                            <?php foreach (array_slice(($tables['tables'] ?? array()), 0, 12) as $t) : ?>
+                                <tr><td><code><?php echo esc_html($t['table']); ?></code></td>
+                                    <td><?php echo esc_html($t['size_mb']); ?> MB</td>
+                                    <td><?php echo esc_html($t['overhead_mb']); ?> MB</td></tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div><?php // /database ?>
+    <?php endif; ?>
+
 </div>
 
 <style>
@@ -643,11 +752,30 @@ $tabs = array(
 .nyx-tab.is-active {
     background: var(--nyx-primary); border-color: var(--nyx-primary);
     color: #fff; font-weight: 600;
+    /* Stated again rather than inherited. An active tab is also the focused
+       one, and anything that reaches it with equal specificity would otherwise
+       win on source order and square off the only tab that is filled. */
+    border-radius: var(--nyx-r-tab);
 }
 .nyx-tab .dashicons { font-size: 17px; width: 17px; height: 17px; }
+/*
+ * Focus ring drawn with box-shadow rather than outline.
+ *
+ * outline has only followed border-radius since Safari 16.4, and not at all in
+ * some older engines - so on a pill it renders as a rectangle, which on the
+ * active tab reads as though that one tab lost its rounding. box-shadow has
+ * always followed the radius.
+ *
+ * The transparent outline is kept deliberately: in Windows High Contrast Mode
+ * box-shadow is dropped entirely, and a transparent outline is forced to a
+ * visible colour. Without it, focus would be invisible to the people who most
+ * need to see it.
+ */
 .nyx-tab:focus-visible, .nyx a:focus-visible, .nyx button:focus-visible,
 .nyx input:focus-visible, .nyx label:focus-within {
-    outline: 2px solid var(--nyx-info); outline-offset: 2px;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--nyx-base), 0 0 0 4px var(--nyx-info);
 }
 
 /* Layout */
