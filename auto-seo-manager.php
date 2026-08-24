@@ -3,7 +3,7 @@
  * Plugin Name: Nyuchi WordPress Optimization
  * Plugin URI: https://github.com/nyuchi/auto-seo-manager
  * Description: SEO, metadata, and database cleaning and editing. Automates Yoast SEO fields, reports what is costing the database, and exposes the lot to the REST API and to MCP clients. By Nyuchi Web Services.
- * Version: 1.2.3
+ * Version: 1.3.0
  * Author: Nyuchi Web Services
  * Author URI: https://nyuchi.com
  * Developer: Bryan Fawcett (@bryanfawcett)
@@ -25,7 +25,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AUTO_SEO_VERSION', '1.2.3');
+define('AUTO_SEO_VERSION', '1.3.0');
 define('AUTO_SEO_DB_VERSION', 2);
 
 class AutoSEOManager {
@@ -1681,5 +1681,28 @@ if (file_exists($auto_seo_database_file)) {
 
     if (class_exists('AutoSEODatabase')) {
         new AutoSEODatabase();
+    }
+}
+
+// Attachment repair. Finds records whose stored file contradicts their recorded
+// type - what an in-place image conversion leaves behind - and repoints them at
+// a replacement once one exists on disk.
+$auto_seo_media_file = plugin_dir_path(__FILE__) . 'media-repair.php';
+if (file_exists($auto_seo_media_file)) {
+    require_once $auto_seo_media_file;
+
+    if (class_exists('AutoSEOMediaRepair')) {
+        new AutoSEOMediaRepair();
+    }
+}
+
+// Updates from GitHub Releases. A plugin outside wordpress.org gets no update
+// notice, so without this a site sits on whatever version was installed.
+$auto_seo_updater_file = plugin_dir_path(__FILE__) . 'updater.php';
+if (is_admin() && file_exists($auto_seo_updater_file)) {
+    require_once $auto_seo_updater_file;
+
+    if (class_exists('AutoSEOUpdater')) {
+        new AutoSEOUpdater(__FILE__);
     }
 }

@@ -4,7 +4,7 @@ Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.2.3
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,24 @@ Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
 == Changelog ==
+
+= 1.3.0 =
+* Updates now arrive through GitHub Releases, so this plugin gets an update
+  notice and a one-click update like any directory plugin. Until now every
+  change had to be copied onto the server by hand, which meant the installed
+  copy matched no released artifact and there was no way to tell what a site
+  was actually running.
+* Attachment repair. An optimiser that converts a file in place and renames it
+  without updating the attachment record leaves WordPress describing a file
+  that is not there: the library reports the wrong type, offload plugins send
+  bytes the destination rejects, and nothing errors because as far as
+  WordPress is concerned nothing failed. media-mismatches lists them;
+  media-repair repoints the record and rebuilds the attachment metadata, and
+  restores the original pointer if that rebuild fails.
+* Continuous integration on PHP 7.4 and 8.3, with a guard against the plugin
+  header, AUTO_SEO_VERSION and the readme stable tag drifting apart - a
+  mismatch there means the updater offers a version that is not the one people
+  receive.
 
 = 1.2.3 =
 * Abilities moved from the nyuchi-seo namespace to nyuchi-optimization, so the
