@@ -7,8 +7,8 @@
  * Author: Nyuchi Web Services
  * Author URI: https://nyuchi.com
  * Developer: Bryan Fawcett (@bryanfawcett)
- * License: MIT
- * License URI: https://opensource.org/licenses/MIT
+ * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: nyuchi-seo-addons
  * Requires at least: 5.0
  * Tested up to: 7.0
