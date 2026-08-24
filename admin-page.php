@@ -77,7 +77,7 @@ if (!class_exists('AutoSEODatabase')) {
 
     <header class="nyx-head">
         <div class="nyx-head-id">
-            <span class="nyx-wordmark">nyuchi</span>
+            <span class="nyx-wordmark">Nyuchi</span>
             <h1 class="nyx-title">WordPress Optimization</h1>
             <span class="nyx-version">v<?php echo esc_html(AUTO_SEO_VERSION); ?></span>
         </div>
@@ -714,7 +714,7 @@ if (!class_exists('AutoSEODatabase')) {
 .nyx-head-id { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .nyx-wordmark {
     font-weight: 700; font-size: 13px; letter-spacing: 0.14em;
-    text-transform: lowercase; color: var(--nyx-gold);
+    text-transform: none; color: var(--nyx-gold);
     border: 1px solid var(--nyx-border); border-radius: 999px;
     padding: 3px 11px; background: var(--nyx-sunken);
 }

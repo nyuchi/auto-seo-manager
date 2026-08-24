@@ -4,7 +4,7 @@ Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.3.1
+Stable tag: 1.3.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,10 @@ Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
 == Changelog ==
+
+= 1.3.2 =
+* The Nyuchi wordmark is capitalised. It was being lowercased in CSS, which
+  rendered the company name as a styling choice rather than a name.
 
 = 1.3.1 =
 * A Database tab. The database features shipped in 1.2.x as abilities only,
