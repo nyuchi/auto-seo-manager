@@ -4,7 +4,7 @@ Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.7.0
+Stable tag: 1.7.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,19 @@ Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
 == Changelog ==
+
+= 1.7.1 =
+* Fixed db-write and db-replace corrupting every backslash in a value. WordPress
+  unslashes on the way in, because it was written for form posts, which arrive
+  slashed. A value coming from an API call never was, so it lost a level: a JSON
+  string's escaped quote became a bare quote and its newline escape became a
+  literal n, and what landed in the database no longer parsed.
+* This could destroy an Elementor page, a serialised option, or anything else
+  holding escaped characters, and it did so silently - the write reported
+  success and the damage only showed when something tried to read the value
+  back.
+* db-replace was the more dangerous of the two, since it exists to rewrite
+  serialised values, which are full of escaped quotes.
 
 = 1.7.0 =
 * Convert images on the server. An optimiser previously rewrote files to AVIF
@@ -297,6 +310,12 @@ a run endpoint for authenticated clients. Treat the cron URL as a credential.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.7.1 =
+Fixes silent data corruption in db-write and db-replace. If you wrote a value
+containing backslashes or escaped quotes with an earlier version, check it still
+parses. Any workaround that doubled backslashes before writing should now be
+removed.
 
 = 1.7.0 =
 Adds server-side image conversion. It rewrites files and attachment records, so
