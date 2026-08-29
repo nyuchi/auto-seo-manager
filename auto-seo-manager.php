@@ -3,7 +3,7 @@
  * Plugin Name: Nyuchi WordPress Optimization
  * Plugin URI: https://github.com/nyuchi/auto-seo-manager
  * Description: SEO, metadata, and database cleaning and editing. Automates Yoast SEO fields, reports what is costing the database, and exposes the lot to the REST API and to MCP clients. By Nyuchi Web Services.
- * Version: 1.6.0
+ * Version: 1.7.0
  * Author: Nyuchi Web Services
  * Author URI: https://nyuchi.com
  * Developer: Bryan Fawcett (@bryanfawcett)
@@ -25,7 +25,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AUTO_SEO_VERSION', '1.6.0');
+define('AUTO_SEO_VERSION', '1.7.0');
 define('AUTO_SEO_DB_VERSION', 2);
 
 class AutoSEOManager {
@@ -1836,6 +1836,18 @@ if (file_exists($auto_seo_elementor_file)) {
 
     if (class_exists('AutoSEOElementor')) {
         new AutoSEOElementor();
+    }
+}
+
+// Converting images the optimiser left behind. The plugin runs on the server
+// with the files on local disk, so it can decode and re-encode them in place -
+// no transfer, no upload, no dependency on anyone having SFTP access.
+$auto_seo_convert_file = plugin_dir_path(__FILE__) . 'media-convert.php';
+if (file_exists($auto_seo_convert_file)) {
+    require_once $auto_seo_convert_file;
+
+    if (class_exists('AutoSEOMediaConvert')) {
+        new AutoSEOMediaConvert();
     }
 }
 
