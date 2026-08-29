@@ -1774,6 +1774,19 @@ if (file_exists($auto_seo_dbedit_file)) {
     }
 }
 
+// Image sizing at the delivery layer. Offloading to Cloudflare Images leaves
+// WordPress with no sub-sizes and no recorded dimensions, so every size request
+// resolves to the same uncropped image. This puts the requested shape back into
+// the delivery URL, where Cloudflare can honour it.
+$auto_seo_imgsize_file = plugin_dir_path(__FILE__) . 'image-sizes.php';
+if (file_exists($auto_seo_imgsize_file)) {
+    require_once $auto_seo_imgsize_file;
+
+    if (class_exists('AutoSEOImageSizes')) {
+        new AutoSEOImageSizes();
+    }
+}
+
 // Updates from GitHub Releases. A plugin outside wordpress.org gets no update
 // notice, so without this a site sits on whatever version was installed.
 $auto_seo_updater_file = plugin_dir_path(__FILE__) . 'updater.php';
