@@ -3,7 +3,7 @@
  * Plugin Name: Nyuchi WordPress Optimization
  * Plugin URI: https://github.com/nyuchi/auto-seo-manager
  * Description: SEO, metadata, and database cleaning and editing. Automates Yoast SEO fields, reports what is costing the database, and exposes the lot to the REST API and to MCP clients. By Nyuchi Web Services.
- * Version: 1.5.0
+ * Version: 1.6.0
  * Author: Nyuchi Web Services
  * Author URI: https://nyuchi.com
  * Developer: Bryan Fawcett (@bryanfawcett)
@@ -25,7 +25,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AUTO_SEO_VERSION', '1.5.0');
+define('AUTO_SEO_VERSION', '1.6.0');
 define('AUTO_SEO_DB_VERSION', 2);
 
 class AutoSEOManager {
@@ -118,6 +118,11 @@ class AutoSEOManager {
         wp_clear_scheduled_hook('daily_seo_update');
         wp_clear_scheduled_hook('weekly_seo_audit');
         wp_clear_scheduled_hook('auto_seo_prune_log');
+
+        // The metrics recorder schedules itself on init. Left behind, it would
+        // sit in the cron array with nothing listening - exactly the orphaned
+        // event this plugin's own db-orphaned-cron ability reports.
+        wp_clear_scheduled_hook('auto_seo_record_metrics');
     }
 
     private function create_log_table() {
@@ -1784,6 +1789,53 @@ if (file_exists($auto_seo_imgsize_file)) {
 
     if (class_exists('AutoSEOImageSizes')) {
         new AutoSEOImageSizes();
+    }
+}
+
+// Dropping tables left behind by plugins that are gone, and finding the options
+// they left in wp_options. Attribution is deliberately map-first: the name
+// heuristic elsewhere in this plugin calls Yoast's and Elementor's tables
+// orphans, and acting on that would delete a live plugin's data.
+$auto_seo_tables_file = plugin_dir_path(__FILE__) . 'tables.php';
+if (file_exists($auto_seo_tables_file)) {
+    require_once $auto_seo_tables_file;
+
+    if (class_exists('AutoSEOTables')) {
+        new AutoSEOTables();
+    }
+}
+
+// Site health as a readable surface: runtime, database, content, cron, and a
+// recorded history so growth is visible rather than only the current moment.
+$auto_seo_metrics_file = plugin_dir_path(__FILE__) . 'metrics.php';
+if (file_exists($auto_seo_metrics_file)) {
+    require_once $auto_seo_metrics_file;
+
+    if (class_exists('AutoSEOMetrics')) {
+        new AutoSEOMetrics();
+    }
+}
+
+// Listing, checking and applying plugin updates. Updating is the one operation
+// here that can take a site down, so it refuses to update this plugin from
+// inside itself and reports whether each plugin survived still active.
+$auto_seo_plugins_file = plugin_dir_path(__FILE__) . 'plugin-manager.php';
+if (file_exists($auto_seo_plugins_file)) {
+    require_once $auto_seo_plugins_file;
+
+    if (class_exists('AutoSEOPluginManager')) {
+        new AutoSEOPluginManager();
+    }
+}
+
+// Reading and building Elementor pages. Elementor is not a dependency: every
+// ability reports its absence as a fact about the site rather than failing.
+$auto_seo_elementor_file = plugin_dir_path(__FILE__) . 'elementor.php';
+if (file_exists($auto_seo_elementor_file)) {
+    require_once $auto_seo_elementor_file;
+
+    if (class_exists('AutoSEOElementor')) {
+        new AutoSEOElementor();
     }
 }
 

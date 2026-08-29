@@ -4,7 +4,7 @@ Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.0
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,35 @@ Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
 == Changelog ==
+
+= 1.6.0 =
+* Drop tables left behind by plugins that are no longer installed, so the
+  third-party database cleaner can be retired. Dropping is irreversible, so it
+  is a dry run unless told otherwise, refuses core tables outright, refuses
+  tables outside this install's prefix unless forced, and re-derives whether a
+  table is really an orphan rather than trusting the caller.
+* Table attribution is now a map first and a name heuristic only as a fallback.
+  The heuristic on its own reported Yoast's, Elementor's, WP Travel's and this
+  plugin's own tables as orphans, and acting on that would have deleted a live
+  plugin's data.
+* Report options left behind by uninstalled plugins - the wp_options equivalent
+  of an orphaned table. Read-only; deletion goes through the existing tools.
+* Site metrics as a readable surface: PHP and memory limits, OPcache, object
+  cache, database size and overhead, content counts by type, term and user
+  counts, and the cron queue including how far behind it is running.
+* Health checks return a plain pass or fail with a sentence of explanation each,
+  rather than numbers a reader has to interpret.
+* A daily recorded history, so growth is visible rather than only the current
+  moment. Stored without autoload, because an ever-growing autoloaded option is
+  precisely the fault this plugin exists to find.
+* List installed plugins with their update status, check for updates on demand,
+  apply updates, and activate or deactivate a plugin. Updating defaults to a dry
+  run, reports whether each plugin is still active afterwards, and refuses to
+  update this plugin from inside itself.
+* Read and build Elementor pages, including a page's element tree, a widget's
+  available controls, and creating or patching a layout from a simplified
+  description. Elementor is not a dependency: its absence is reported as a fact
+  about the site rather than failing the call.
 
 = 1.5.0 =
 * Image sizes work again on sites offloading to Cloudflare Images. Offloading
@@ -245,6 +274,11 @@ a run endpoint for authenticated clients. Treat the cron URL as a credential.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.6.0 =
+Adds the ability to drop database tables and apply plugin updates. Both are
+irreversible and both default to a dry run - read what a call reports before
+running it again with the dry run turned off.
 
 = 1.5.0 =
 Images start cropping to the size that was requested instead of keeping the
