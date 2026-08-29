@@ -302,10 +302,17 @@ class AutoSEODatabaseEditor {
             );
         }
 
+        // WordPress expects slashed input here and unslashes on the way in, because
+        // it was written for form posts, which arrive slashed. A value that came
+        // from an API call never was, so every backslash in it loses one level:
+        // a JSON string's \" becomes " and its \n becomes a literal n, and what
+        // lands in the database no longer parses. Slashing first cancels that out.
+        $slashed = wp_slash($value);
+
         if ('option' === $kind) {
-            $ok = update_option($key, $value);
+            $ok = update_option($key, $slashed);
         } else {
-            $ok = update_metadata(str_replace('_meta', '', $kind), (int) $id, $key, $value);
+            $ok = update_metadata(str_replace('_meta', '', $kind), (int) $id, $key, $slashed);
         }
 
         return array(
@@ -387,7 +394,7 @@ class AutoSEODatabaseEditor {
                 }
 
                 if ('options' === $table) {
-                    update_option($r['id'], $now);
+                    update_option($r['id'], wp_slash($now));
                 } elseif ('posts' === $table) {
                     $wpdb->update($wpdb->posts, array('post_content' => $now), array('ID' => (int) $r['id']));
                     clean_post_cache((int) $r['id']);
