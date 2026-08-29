@@ -4,7 +4,7 @@ Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,28 @@ Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
 == Changelog ==
+
+= 1.5.0 =
+* Image sizes work again on sites offloading to Cloudflare Images. Offloading
+  removes the local sub-sizes and, on some sites, the recorded width and height
+  with them. WordPress is then left holding one image of unknown dimensions, so
+  every request for medium, large or a theme's own size resolves to the same
+  file, and it is delivered width-constrained only. Nothing crops, so the
+  aspect ratio is always whatever the source photograph happened to be.
+* The requested shape now goes into the delivery URL, where Cloudflare can
+  honour it. A size that crops becomes a width, a height and fit=cover; one
+  that does not becomes a width and fit=scale-down, which is the same promise
+  WordPress made. Nothing is regenerated and nothing is re-uploaded.
+* Crops use gravity=auto, which picks the focal point by detecting the most
+  visually interesting part of the image rather than taking the middle.
+* The srcset is rewritten to match the src, so a browser choosing a wider
+  candidate gets the same shape rather than swapping a cropped image for an
+  uncropped one while the page is still loading.
+* Width and height go back onto the tag, so there is an aspect ratio to
+  reserve before the image arrives and the page stops shifting as it loads.
+* Only flexible variants on imagedelivery.net are rewritten. A named variant
+  takes no parameters and is left alone, as is any URL the plugin does not
+  recognise, and parameters already present are preserved.
 
 = 1.4.0 =
 * Read and write individual database values. The database module reported and
@@ -223,6 +245,11 @@ a run endpoint for authenticated clients. Treat the cron URL as a credential.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.5.0 =
+Images start cropping to the size that was requested instead of keeping the
+source photograph's shape. This is the intended behaviour, but it will change
+how existing pages look. Check a page with a card grid after upgrading.
 
 = 1.1.0 =
 Adds logging controls and fixes a defect that could grow the activity log without limit.

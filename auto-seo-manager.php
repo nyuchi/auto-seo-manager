@@ -3,7 +3,7 @@
  * Plugin Name: Nyuchi WordPress Optimization
  * Plugin URI: https://github.com/nyuchi/auto-seo-manager
  * Description: SEO, metadata, and database cleaning and editing. Automates Yoast SEO fields, reports what is costing the database, and exposes the lot to the REST API and to MCP clients. By Nyuchi Web Services.
- * Version: 1.4.0
+ * Version: 1.5.0
  * Author: Nyuchi Web Services
  * Author URI: https://nyuchi.com
  * Developer: Bryan Fawcett (@bryanfawcett)
@@ -25,7 +25,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AUTO_SEO_VERSION', '1.4.0');
+define('AUTO_SEO_VERSION', '1.5.0');
 define('AUTO_SEO_DB_VERSION', 2);
 
 class AutoSEOManager {
@@ -1771,6 +1771,19 @@ if (file_exists($auto_seo_dbedit_file)) {
 
     if (class_exists('AutoSEODatabaseEditor')) {
         new AutoSEODatabaseEditor();
+    }
+}
+
+// Image sizing at the delivery layer. Offloading to Cloudflare Images leaves
+// WordPress with no sub-sizes and no recorded dimensions, so every size request
+// resolves to the same uncropped image. This puts the requested shape back into
+// the delivery URL, where Cloudflare can honour it.
+$auto_seo_imgsize_file = plugin_dir_path(__FILE__) . 'image-sizes.php';
+if (file_exists($auto_seo_imgsize_file)) {
+    require_once $auto_seo_imgsize_file;
+
+    if (class_exists('AutoSEOImageSizes')) {
+        new AutoSEOImageSizes();
     }
 }
 
