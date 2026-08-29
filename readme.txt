@@ -4,7 +4,7 @@ Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.3.2
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,26 @@ Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
 == Changelog ==
+
+= 1.4.0 =
+* Read and write individual database values. The database module reported and
+  deleted in bulk but could not read or change one thing, which is the half
+  the name "editor" was promising.
+* db-read returns a single option or meta value with its type, size, whether
+  it is serialised and whether it is autoloaded.
+* db-find reports which rows hold a string, across options, meta and post
+  content. Read-only, and the sensible step before a replace - it says how
+  many rows a change would touch before anything is touched.
+* db-write sets one value, defaults to a dry run, and returns the previous
+  value so a change can be undone without having read it first.
+* db-replace does find-and-replace across the database, unserialising values
+  before replacing and re-serialising after. A plain SQL replace changes the
+  text of a serialised array without changing the byte-length prefixes PHP
+  wrote into it, and the result no longer unserialises - WordPress then reads
+  the option as empty and settings quietly disappear, usually noticed long
+  after the replace that caused it.
+* Options that can make the site or the admin unreachable - siteurl, home,
+  active_plugins and similar - are refused unless asked for by name.
 
 = 1.3.2 =
 * The Nyuchi wordmark is capitalised. It was being lowercased in CSS, which
