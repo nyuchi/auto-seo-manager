@@ -4,7 +4,7 @@ Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.0
+Stable tag: 1.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,29 @@ Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
 == Changelog ==
+
+= 1.7.0 =
+* Convert images on the server. An optimiser previously rewrote files to AVIF
+  and WebP in place without updating the record, leaving attachments whose
+  database entry says JPEG while the file on disk is something else. Cloudflare
+  Images refuses AVIF, so those images were never offloaded.
+* The conversion happens where the files already are. Nothing is downloaded,
+  converted elsewhere and uploaded back, and no SFTP access is needed.
+* Imagick is used where available and GD otherwise, decided by asking the
+  server what it can actually decode rather than inferring it from the PHP
+  version - AVIF support in GD depends on how libgd was built.
+* A file that was a PNG before conversion goes back to PNG, and so does any
+  image found to have transparency. Flattening a transparent logo to JPEG
+  gives it a black background.
+* The converted file is written to a temporary name and checked before the
+  record is touched. If metadata cannot be rebuilt afterwards, the record is
+  put back as it was and the good file is left for media-repair to use.
+* Zero-byte sources are reported as data loss rather than converted into a
+  corrupt file.
+* media-scan reports image problems generally: files missing from disk, files
+  of zero bytes, records whose type disagrees with the file's actual contents,
+  attachments with no sub-sizes, oversized images, and files in the uploads
+  directory with no record at all.
 
 = 1.6.0 =
 * Drop tables left behind by plugins that are no longer installed, so the
@@ -274,6 +297,11 @@ a run endpoint for authenticated clients. Treat the cron URL as a credential.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.7.0 =
+Adds server-side image conversion. It rewrites files and attachment records, so
+it defaults to a dry run - read what a call reports before running it again
+with the dry run turned off.
 
 = 1.6.0 =
 Adds the ability to drop database tables and apply plugin updates. Both are
