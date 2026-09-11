@@ -30,24 +30,28 @@ We welcome contributions in many forms:
 
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
+
    ```bash
    git clone https://github.com/yourusername/auto-seo-manager.git
    cd auto-seo-manager
    ```
 
 3. **Install dependencies**:
+
    ```bash
    composer install
    npm install
    ```
 
 4. **Set up WordPress** development environment:
+
    ```bash
    # Using Local by Flywheel, XAMPP, or Docker
    # Copy plugin to wp-content/plugins/auto-seo-manager/
    ```
 
 5. **Create a branch** for your work:
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -86,13 +90,14 @@ git push origin feature/your-feature-name
 We follow the [WordPress Coding Standards](https://developer.wordpress.org/coding-standards/):
 
 - **PHP**: WordPress PHP Coding Standards
-- **HTML**: WordPress HTML Coding Standards  
+- **HTML**: WordPress HTML Coding Standards
 - **CSS**: WordPress CSS Coding Standards
 - **JavaScript**: WordPress JavaScript Coding Standards
 
 ### Code Style Guidelines
 
 **PHP Code:**
+
 ```php
 <?php
 /**
@@ -106,18 +111,20 @@ function auto_seo_example_function( $param ) {
     if ( ! empty( $param ) ) {
         return true;
     }
-    
+
     return false;
 }
 ```
 
 **Naming Conventions:**
+
 - Functions: `auto_seo_function_name()`
 - Classes: `AutoSEOClassName`
 - Variables: `$variable_name`
 - Constants: `AUTO_SEO_CONSTANT_NAME`
 
 **Documentation:**
+
 - All functions must have PHPDoc comments
 - Include `@param` and `@return` tags
 - Explain complex logic with inline comments
@@ -145,19 +152,19 @@ Create tests for all new functionality:
 ```php
 <?php
 class TestNewFeature extends WP_UnitTestCase {
-    
+
     public function setUp(): void {
         parent::setUp();
         // Setup test environment
     }
-    
+
     public function test_new_feature_works() {
         // Arrange
         $input = 'test data';
-        
+
         // Act
         $result = auto_seo_new_feature( $input );
-        
+
         // Assert
         $this->assertEquals( 'expected result', $result );
     }
@@ -193,12 +200,12 @@ Before submitting:
 Brief description of the issue.
 
 ## Environment
-- WordPress version: 
-- PHP version: 
-- Auto SEO Manager version: 
-- Yoast SEO version: 
-- Active theme: 
-- Other SEO plugins: 
+- WordPress version:
+- PHP version:
+- Auto SEO Manager version:
+- Yoast SEO version:
+- Active theme:
+- Other SEO plugins:
 
 ## Steps to Reproduce
 1. Go to...
@@ -208,7 +215,7 @@ Brief description of the issue.
 ## Expected Behavior
 What you expected to happen.
 
-## Actual Behavior  
+## Actual Behavior
 What actually happened.
 
 ## Screenshots/Logs
@@ -301,7 +308,7 @@ Brief description of changes.
 
 ## Type of Change
 - [ ] Bug fix
-- [ ] New feature  
+- [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
@@ -401,29 +408,34 @@ Current areas where contributions are especially welcome:
 ### Skill-Based Contributions
 
 **PHP Developers:**
+
 - Core plugin features
 - Plugin integrations
 - Performance optimization
 - Security improvements
 
 **Frontend Developers:**
+
 - Admin interface improvements
 - Accessibility enhancements
 - Mobile optimization
 
 **Documentation Writers:**
+
 - User guides
 - Developer documentation
 - Tutorial content
 - Translation
 
 **Testers:**
+
 - Compatibility testing
 - User experience testing
 - Performance testing
 - Security testing
 
 **Designers:**
+
 - UI/UX improvements
 - Plugin assets
 - Marketing materials

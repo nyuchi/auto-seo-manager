@@ -31,14 +31,14 @@ rather than a migration.
   MCP clients and other automation without screen-scraping wp-admin. Every
   route requires `manage_options`.
 
-  | Method | Route | Purpose |
-  | --- | --- | --- |
-  | `GET` | `/wp-json/auto-seo/v1/status` | Version, DB version, master switch, whether Yoast is active, log statistics, integration availability, next scheduled run for each event. |
-  | `GET` | `/wp-json/auto-seo/v1/settings` | Current values of the writable settings, plus `post_types` and `title_templates`. |
-  | `POST` | `/wp-json/auto-seo/v1/settings` | Write settings. Keys are coerced by declared type; unrecognised keys are returned under `ignored` rather than written. |
-  | `GET` | `/wp-json/auto-seo/v1/logs` | Log statistics and up to `limit` entries, capped at 500. |
-  | `DELETE` | `/wp-json/auto-seo/v1/logs` | Purge the log, returning the number of rows removed. |
-  | `POST` | `/wp-json/auto-seo/v1/run` | Run an update. With `post_id`, one post; without it, a site-wide run. |
+  | Method   | Route                           | Purpose                                                                                                                                   |
+  | -------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+  | `GET`    | `/wp-json/auto-seo/v1/status`   | Version, DB version, master switch, whether Yoast is active, log statistics, integration availability, next scheduled run for each event. |
+  | `GET`    | `/wp-json/auto-seo/v1/settings` | Current values of the writable settings, plus `post_types` and `title_templates`.                                                         |
+  | `POST`   | `/wp-json/auto-seo/v1/settings` | Write settings. Keys are coerced by declared type; unrecognised keys are returned under `ignored` rather than written.                    |
+  | `GET`    | `/wp-json/auto-seo/v1/logs`     | Log statistics and up to `limit` entries, capped at 500.                                                                                  |
+  | `DELETE` | `/wp-json/auto-seo/v1/logs`     | Purge the log, returning the number of rows removed.                                                                                      |
+  | `POST`   | `/wp-json/auto-seo/v1/run`      | Run an update. With `post_id`, one post; without it, a site-wide run.                                                                     |
 
   `POST /settings` rejects an unknown `log_level` with `auto_seo_bad_log_level`
   and HTTP 400. `POST /run` returns `auto_seo_yoast_missing` and HTTP 409 when
