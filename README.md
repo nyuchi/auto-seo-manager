@@ -23,6 +23,7 @@ Auto SEO Manager is a powerful WordPress plugin that automatically generates and
 ## ✨ Key Features
 
 ### 🔧 **Core Automation**
+
 - ✅ **Automated SEO Generation** - Titles, descriptions, and keywords from content
 - ✅ **Yoast SEO Integration** - Works alongside existing Yoast data without conflicts
 - ✅ **Scheduled Processing** - Daily automation with external cron support
@@ -30,6 +31,7 @@ Auto SEO Manager is a powerful WordPress plugin that automatically generates and
 - ✅ **Smart Detection** - Only processes content missing SEO data
 
 ### 🏷️ **Comprehensive Meta Tags**
+
 - ✅ **Basic SEO Tags** - Description, keywords, author, robots
 - ✅ **Open Graph Tags** - Complete social media optimization
 - ✅ **Twitter Cards** - Enhanced Twitter sharing with large images
@@ -37,6 +39,7 @@ Auto SEO Manager is a powerful WordPress plugin that automatically generates and
 - ✅ **Google Verification** - Search Console integration
 
 ### 🔌 **Plugin Integrations**
+
 - ✅ **WooCommerce** - Product SEO with pricing, inventory, categories
 - ✅ **Advanced Custom Fields** - Use ACF fields for SEO data
 - ✅ **Elementor** - Extract content from page builder elements
@@ -47,6 +50,7 @@ Auto SEO Manager is a powerful WordPress plugin that automatically generates and
 - ✅ **Custom Post Types** - Support for any post type
 
 ### 🎛️ **Management Interface**
+
 - ✅ **Visual Integration Management** - Easy enable/disable for each plugin
 - ✅ **Activity Monitoring** - Comprehensive logging and reporting
 - ✅ **Manual Tools** - Bulk updates and meta tag preview
@@ -57,13 +61,13 @@ Auto SEO Manager is a powerful WordPress plugin that automatically generates and
 
 ## 📋 Requirements
 
-| Component | Version | Status |
-|-----------|---------|--------|
-| **WordPress** | 5.0+ | Required |
-| **PHP** | 7.4+ | Required |
-| **Yoast SEO** | Any version | Required |
-| **Memory** | 128MB+ | Recommended |
-| **Server** | Apache/Nginx | Required |
+| Component     | Version      | Status      |
+| ------------- | ------------ | ----------- |
+| **WordPress** | 5.0+         | Required    |
+| **PHP**       | 7.4+         | Required    |
+| **Yoast SEO** | Any version  | Required    |
+| **Memory**    | 128MB+       | Recommended |
+| **Server**    | Apache/Nginx | Required    |
 
 ---
 
@@ -79,14 +83,17 @@ Auto SEO Manager is a powerful WordPress plugin that automatically generates and
 ### Method 2: Manual Installation
 
 1. **Clone** or download this repository
+
    ```bash
    git clone https://github.com/nyuchitech/auto-seo-manager.git
    ```
+
 2. **Upload** the folder to `/wp-content/plugins/auto-seo-manager/`
 3. **Activate** through WordPress Admin → Plugins
 4. **Configure** settings
 
 ### Required Files Structure
+
 ```
 /wp-content/plugins/auto-seo-manager/
 ├── auto-seo-manager.php          # Main plugin file
@@ -103,25 +110,29 @@ Auto SEO Manager is a powerful WordPress plugin that automatically generates and
 ## ⚙️ Quick Setup Guide
 
 ### 1. **Basic Configuration**
+
 1. Go to **Settings → Auto SEO Manager**
-2. ✅ Check **"Enable Auto SEO"**  
+2. ✅ Check **"Enable Auto SEO"**
 3. Select **post types** to process (posts, pages, products, etc.)
 4. Set **meta description length** (155 characters recommended)
 5. Add your **email** for weekly audit reports
 
 ### 2. **Meta Tags Setup**
+
 1. ✅ Enable **"Additional Meta Tags"**
 2. Set **site author** name
 3. Add **Google site verification** token
 4. Configure **default robots** setting (index, follow)
 
 ### 3. **Social Media Setup**
+
 1. ✅ Enable **"Open Graph Tags"**
 2. Set **default OG image** URL (1200x630px recommended)
 3. ✅ Enable **"Twitter Cards"**
 4. Add your **Twitter username** (without @)
 
 ### 4. **Integration Setup**
+
 1. Go to **Integrations tab**
 2. **Review available integrations** - automatically detects installed plugins
 3. **Toggle integrations** on/off as needed
@@ -132,9 +143,11 @@ Auto SEO Manager is a powerful WordPress plugin that automatically generates and
 ## 🔌 Plugin Integrations
 
 ### 🛒 **WooCommerce Integration**
+
 Transform your product SEO with automated enhancements:
 
 **Features:**
+
 - Product-specific title templates with pricing placeholders
 - Enhanced descriptions with inventory status and pricing
 - Category and attribute keyword extraction
@@ -142,6 +155,7 @@ Transform your product SEO with automated enhancements:
 - Sale status integration in meta descriptions
 
 **Title Placeholders:**
+
 ```php
 %%price%%           // Product price: $29.99
 %%sale%%            // "On Sale" if applicable
@@ -150,6 +164,7 @@ Transform your product SEO with automated enhancements:
 ```
 
 **Example Templates:**
+
 ```php
 // Product page
 '%%title%% - %%price%% | %%product_category%% | %%sitename%%'
@@ -157,9 +172,11 @@ Transform your product SEO with automated enhancements:
 ```
 
 ### 🔧 **Advanced Custom Fields Integration**
+
 Leverage your custom fields for SEO automation:
 
 **Supported Field Names:**
+
 - `seo_description` - Override auto-generated descriptions
 - `seo_keywords` - Custom focus keywords
 - `focus_keywords` - Alternative keyword field
@@ -170,6 +187,7 @@ Leverage your custom fields for SEO automation:
 - `og_image` - Custom OG image
 
 **Priority System:**
+
 1. ACF custom fields (highest priority)
 2. Yoast SEO existing data
 3. Auto-generated content (fallback)
@@ -177,19 +195,23 @@ Leverage your custom fields for SEO automation:
 ### 🎨 **Page Builder Integrations**
 
 **Elementor Integration:**
+
 - Extracts text from all Elementor widgets and sections
 - Parses page builder data for comprehensive content analysis
 - Works with any Elementor layout or template
 
 **Beaver Builder Integration:**
+
 - Processes Beaver Builder modules and content
 - Extracts text from all builder elements
 - Maintains layout-aware SEO generation
 
 ### 📅 **Events Calendar Integration**
+
 Perfect for event websites and venues:
 
 **Event Placeholders:**
+
 ```php
 %%event_date%%    // Event start date: "March 15, 2024"
 %%event_venue%%   // Venue name: "Madison Square Garden"
@@ -197,17 +219,21 @@ Perfect for event websites and venues:
 ```
 
 **Auto-Generated Content:**
+
 - Event dates in titles and descriptions
 - Venue information integration
 - Calendar-specific meta optimization
 
 ### 🌐 **Multi-Language Support**
+
 **WPML Integration:**
+
 - Language-specific title templates
 - Localized meta descriptions
 - Regional SEO optimization
 
 **Polylang Integration:**
+
 - Multi-language keyword extraction
 - Language-aware content processing
 - Localized social media tags
@@ -217,7 +243,9 @@ Perfect for event websites and venues:
 ## 🎯 Usage Examples
 
 ### **Automated Processing**
+
 The plugin runs automatically and:
+
 1. **Scans daily** for content missing SEO data
 2. **Generates titles** using your custom templates
 3. **Creates descriptions** from content or excerpts
@@ -226,15 +254,17 @@ The plugin runs automatically and:
 6. **Sends weekly reports** with SEO audit findings
 
 ### **Manual Tools**
+
 Access powerful manual tools for immediate results:
 
 - **🔄 Bulk Update**: Process all content immediately
-- **👁️ Meta Preview**: See generated tags before publishing  
+- **👁️ Meta Preview**: See generated tags before publishing
 - **🧪 Test Utility**: Comprehensive validation and debugging
 - **📊 Activity Monitor**: Track all plugin operations
 - **⚙️ System Info**: Integration status and scheduling details
 
 ### **Generated Meta Tags Example**
+
 ```html
 <!-- Basic SEO Tags -->
 <meta name="description" content="Complete guide to WordPress SEO automation with step-by-step instructions and expert tips.">
@@ -264,12 +294,13 @@ Access powerful manual tools for immediate results:
 ## 🛠️ Advanced Configuration
 
 ### **Custom Title Templates**
+
 Create dynamic, SEO-optimized titles for each post type:
 
 ```php
 // Available placeholders
 %%title%%        // Post/page title
-%%sitename%%     // Your site name  
+%%sitename%%     // Your site name
 %%currentdate%%  // Current year
 %%category%%     // Primary category
 %%author%%       // Post author name
@@ -282,6 +313,7 @@ Create dynamic, SEO-optimized titles for each post type:
 ```
 
 ### **External Cron Setup** (Recommended)
+
 For reliable automation on high-traffic sites:
 
 ```bash
@@ -295,6 +327,7 @@ For reliable automation on high-traffic sites:
 ```
 
 ### **Performance Optimization**
+
 ```php
 // Recommended settings for different site sizes
 
@@ -303,7 +336,7 @@ Batch Size: 50-100 posts
 Memory Limit: 128MB+
 Execution Time: 60 seconds
 
-// Medium sites (500-2000 posts)  
+// Medium sites (500-2000 posts)
 Batch Size: 25-50 posts
 Memory Limit: 256MB+
 Execution Time: 120 seconds
@@ -319,20 +352,24 @@ Execution Time: 300 seconds
 ## 🔍 Testing & Debugging
 
 ### **Built-in Test Utility**
+
 Access comprehensive testing at:
+
 ```
 yoursite.com/wp-admin/admin.php?page=auto-seo-manager&test_meta=1
 ```
 
 **Test Features:**
+
 - ✅ Plugin status verification
-- ✅ Sample meta tag generation  
+- ✅ Sample meta tag generation
 - ✅ Performance benchmarking
 - ✅ Configuration validation
 - ✅ Integration testing
 - ✅ Conflict detection
 
 ### **Integration Testing**
+
 1. Go to **Settings → Auto SEO Manager → Tools tab**
 2. Click **"Run Manual Update"** to test processing
 3. Check **Activity Log tab** for integration activity
@@ -340,7 +377,9 @@ yoursite.com/wp-admin/admin.php?page=auto-seo-manager&test_meta=1
 5. Use **Meta Preview** to see generated tags
 
 ### **Debug Mode**
+
 Enable detailed logging in `wp-config.php`:
+
 ```php
 define('WP_DEBUG', true);
 define('WP_DEBUG_LOG', true);
@@ -354,13 +393,15 @@ tail -f /wp-content/debug.log | grep "Auto SEO"
 ## 📊 Performance & Optimization
 
 ### **Efficiency Features**
+
 - **Smart Batch Processing**: Handles large sites without timeouts
-- **Memory Management**: Dynamic batch sizing based on available resources  
+- **Memory Management**: Dynamic batch sizing based on available resources
 - **Caching Integration**: Compatible with popular caching plugins
 - **Database Optimization**: Indexed logging table for fast queries
 - **Resource Monitoring**: Tracks memory usage and execution times
 
 ### **Site Impact**
+
 - **Minimal Resource Usage**: Processes during low-traffic periods
 - **Non-Blocking Operation**: Doesn't affect frontend performance
 - **Graceful Fallbacks**: Continues working if integrations fail
@@ -371,13 +412,15 @@ tail -f /wp-content/debug.log | grep "Auto SEO"
 ## 🛡️ Security Features
 
 ### **Built-in Security**
+
 - ✅ **Nonce verification** for all admin actions
-- ✅ **Capability checks** for user permissions  
+- ✅ **Capability checks** for user permissions
 - ✅ **Input sanitization** for all settings
 - ✅ **Secret cron keys** for external automation
 - ✅ **SQL injection prevention** with prepared statements
 
 ### **Best Practices**
+
 - Keep WordPress and plugins updated regularly
 - Use strong admin passwords and 2FA
 - Limit admin access to trusted users only
@@ -390,15 +433,16 @@ tail -f /wp-content/debug.log | grep "Auto SEO"
 
 ### **Common Issues & Solutions**
 
-| Issue | Symptoms | Solution |
-|-------|----------|----------|
-| **Plugin not generating meta tags** | No meta tags in source | ✅ Verify Yoast SEO is active<br>✅ Enable "Auto Additional Meta"<br>✅ Check post types are selected |
-| **Settings being erased** | Options reset after saving | ✅ Update to latest version<br>✅ Check file permissions<br>✅ Disable conflicting plugins |
-| **Integration not working** | No enhanced SEO for products/events | ✅ Verify plugin is active<br>✅ Enable integration in settings<br>✅ Check integration logs |
-| **Cron not running** | No automatic updates | ✅ Set up external cron<br>✅ Check cron URL format<br>✅ Verify secret key |
-| **Performance issues** | Slow admin/timeouts | ✅ Reduce batch size<br>✅ Increase PHP memory limit<br>✅ Use external cron |
+| Issue                               | Symptoms                            | Solution                                                                                              |
+| ----------------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| **Plugin not generating meta tags** | No meta tags in source              | ✅ Verify Yoast SEO is active<br>✅ Enable "Auto Additional Meta"<br>✅ Check post types are selected |
+| **Settings being erased**           | Options reset after saving          | ✅ Update to latest version<br>✅ Check file permissions<br>✅ Disable conflicting plugins            |
+| **Integration not working**         | No enhanced SEO for products/events | ✅ Verify plugin is active<br>✅ Enable integration in settings<br>✅ Check integration logs          |
+| **Cron not running**                | No automatic updates                | ✅ Set up external cron<br>✅ Check cron URL format<br>✅ Verify secret key                           |
+| **Performance issues**              | Slow admin/timeouts                 | ✅ Reduce batch size<br>✅ Increase PHP memory limit<br>✅ Use external cron                          |
 
 ### **Debug Checklist**
+
 1. ✅ Check WordPress and PHP versions meet requirements
 2. ✅ Verify Yoast SEO is installed and active
 3. ✅ Review activity logs for error messages
@@ -413,6 +457,7 @@ tail -f /wp-content/debug.log | grep "Auto SEO"
 We welcome contributions from the community! Here's how to get involved:
 
 ### **Ways to Contribute**
+
 - 🐛 **Bug Reports**: Help us find and fix issues
 - ✨ **Feature Requests**: Suggest new functionality
 - 📖 **Documentation**: Improve guides and examples
@@ -420,6 +465,7 @@ We welcome contributions from the community! Here's how to get involved:
 - 💻 **Code**: Submit pull requests with improvements
 
 ### **Development Setup**
+
 ```bash
 # Clone the repository
 git clone https://github.com/nyuchitech/auto-seo-manager.git
@@ -434,6 +480,7 @@ wp server --host=localhost --port=8080
 ```
 
 ### **Contribution Guidelines**
+
 1. **Fork** the repository on GitHub
 2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
 3. **Follow** WordPress coding standards
@@ -448,9 +495,11 @@ wp server --host=localhost --port=8080
 ## 📝 Changelog
 
 ### **Version 1.0.0** (2025-01-01)
+
 🎉 **Initial Release**
 
 **🆕 New Features:**
+
 - ✅ Core SEO automation engine with Yoast integration
 - ✅ Comprehensive meta tags generation (description, keywords, author, robots)
 - ✅ Open Graph and Twitter Cards for social media optimization
@@ -462,6 +511,7 @@ wp server --host=localhost --port=8080
 - ✅ Performance optimization with batch processing
 
 **🔌 Integrations:**
+
 - ✅ WooCommerce - Product SEO with pricing and inventory
 - ✅ Advanced Custom Fields - Custom field SEO data
 - ✅ Elementor - Page builder content extraction
@@ -472,6 +522,7 @@ wp server --host=localhost --port=8080
 - ✅ Custom Post Type UI - Extended post type support
 
 **🛠️ Technical:**
+
 - ✅ WordPress 5.0+ compatibility
 - ✅ PHP 7.4+ requirement
 - ✅ Database schema version 1.0
@@ -479,7 +530,9 @@ wp server --host=localhost --port=8080
 - ✅ Performance-optimized batch processing
 
 ### **Upcoming Features (v1.1.0)**
+
 **🚀 Planned Additions:**
+
 - 📊 Advanced analytics dashboard with SEO metrics
 - 🔍 Google Search Console API integration
 - 🧪 A/B testing framework for meta tag optimization
@@ -517,21 +570,25 @@ GNU General Public License for more details.
 ## 👥 Credits & About
 
 ### **Development Team**
+
 **🏢 Company:** [Nyuchi Web Services](https://nyuchi.com)  
 **👨‍💻 Lead Developer:** Bryan Fawcett ([@bryanfawcett](https://github.com/bryanfawcett))  
 **🤝 Contributors:** [View all contributors](https://github.com/nyuchitech/auto-seo-manager/contributors)
 
 ### **About Nyuchi Web Services**
+
 Nyuchi Web Services specializes in WordPress development, SEO optimization, and web automation solutions. We create tools that help businesses improve their online presence through intelligent automation and best-practice implementations.
 
 **🌐 Services:**
+
 - Custom WordPress development
-- SEO automation solutions  
+- SEO automation solutions
 - Plugin and theme development
 - Website optimization consulting
 - Technical SEO audits
 
 **📧 Contact:**
+
 - **Website**: [https://nyuchi.com](https://nyuchi.com)
 - **GitHub**: [https://github.com/nyuchitech](https://github.com/nyuchitech)
 - **Email**: [hello@nyuchi.com](mailto:hello@nyuchi.com)
@@ -542,15 +599,16 @@ Nyuchi Web Services specializes in WordPress development, SEO optimization, and 
 
 ### **Getting Help**
 
-| Type | Resource | Response Time |
-|------|----------|---------------|
-| 📚 **Documentation** | [GitHub Wiki](https://github.com/nyuchitech/auto-seo-manager/wiki) | - |
-| 🐛 **Bug Reports** | [GitHub Issues](https://github.com/nyuchitech/auto-seo-manager/issues) | 48 hours |
-| 💡 **Feature Requests** | [GitHub Discussions](https://github.com/nyuchitech/auto-seo-manager/discussions) | 1 week |
-| 🏢 **Professional Support** | [Nyuchi Web Services](https://nyuchi.com) | 24 hours |
-| 👨‍💻 **Developer Contact** | [@bryanfawcett](https://github.com/bryanfawcett) | Best effort |
+| Type                        | Resource                                                                         | Response Time |
+| --------------------------- | -------------------------------------------------------------------------------- | ------------- |
+| 📚 **Documentation**        | [GitHub Wiki](https://github.com/nyuchitech/auto-seo-manager/wiki)               | -             |
+| 🐛 **Bug Reports**          | [GitHub Issues](https://github.com/nyuchitech/auto-seo-manager/issues)           | 48 hours      |
+| 💡 **Feature Requests**     | [GitHub Discussions](https://github.com/nyuchitech/auto-seo-manager/discussions) | 1 week        |
+| 🏢 **Professional Support** | [Nyuchi Web Services](https://nyuchi.com)                                        | 24 hours      |
+| 👨‍💻 **Developer Contact**    | [@bryanfawcett](https://github.com/bryanfawcett)                                 | Best effort   |
 
 ### **Community Resources**
+
 - 📖 **Installation Guide**: [installation-guide.md](installation-guide.md)
 - 🤝 **Contributing Guide**: [CONTRIBUTING.md](CONTRIBUTING.md)
 - 🔧 **Developer API**: [Wiki - Developer Documentation](https://github.com/nyuchitech/auto-seo-manager/wiki/Developer-API)
@@ -569,7 +627,9 @@ If Auto SEO Manager has helped improve your website's SEO, please consider:
 - 📢 **Share** with the WordPress community
 
 ### **Sponsor Development**
+
 Support ongoing development and new features:
+
 - 💖 [GitHub Sponsors](https://github.com/sponsors/bryanfawcett)
 - ☕ [Buy me a coffee](https://buymeacoffee.com/bryany)
 - 🏢 [Professional services](https://nyuchi.com)
@@ -584,4 +644,4 @@ Support ongoing development and new features:
 
 **Made with ❤️ by [Nyuchi Web Services](https://nyuchi.com) for the WordPress community**
 
-*Specializing in WordPress SEO automation and web development solutions since 2020.*
+_Specializing in WordPress SEO automation and web development solutions since 2020._
