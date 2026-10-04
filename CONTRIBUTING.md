@@ -334,13 +334,23 @@ Brief description of changes.
 
 ## 🏷️ Release Process
 
-### Version Numbering
+### Versioning
 
-We use [Semantic Versioning](https://semver.org/):
+Releases follow the org versioning policy
+([nyuchi/.github#80](https://github.com/nyuchi/.github/issues/80)). The
+branch decides the bump, and there are no version labels:
 
-- **MAJOR** (1.0.0): Breaking changes
-- **MINOR** (1.1.0): New features, backwards compatible
-- **PATCH** (1.0.1): Bug fixes
+- **A merge into `staging`** (the live beta) is tagged as the next
+  **patch** automatically, by `staging-version.yml`.
+- **A release to `main`** is the next **minor** above the highest tag. The
+  PR that releases sets `AUTO_SEO_VERSION` in `auto-seo-manager.php` (and the plugin header) to it. CI refuses any other version
+  and names the right one.
+- **A major** is only ever made by hand: the owner runs the release
+  workflow from the Actions tab with `bump: major`.
+- Each segment holds 0–999. Patch 999 rolls into the next minor; minor 999
+  stops and asks for a manual major.
+
+Versions released before 2026-10-04 are not renumbered.
 
 ### Release Checklist
 

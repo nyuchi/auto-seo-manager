@@ -5,6 +5,11 @@ All notable changes to this plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+> **Versioning, from 2026-10-04:** releases follow the org policy
+> ([nyuchi/.github#80](https://github.com/nyuchi/.github/issues/80)): a merge
+> into `staging` is a patch, a release to `main` is a minor, and a major is
+> only ever made by hand. Earlier versions are not renumbered.
+
 ## [1.1.0] - 2026-08-19
 
 The plugin is now called **Yoast SEO Addons**. The directory, the main file and
