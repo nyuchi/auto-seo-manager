@@ -4,7 +4,7 @@ Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.7.1
+Stable tag: 1.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,13 @@ Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
 == Changelog ==
+
+= 1.8.0 =
+* Maintenance release. The README and installation guide are rewritten
+  against the plugin as it is; lint and format configs follow the org's;
+  CI runs on staging, and releases follow the org versioning policy
+  (staging merges are patches, releases to main are minors). No plugin
+  code changes.
 
 = 1.7.1 =
 * Fixed db-write and db-replace corrupting every backslash in a value. WordPress
