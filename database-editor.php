@@ -491,7 +491,13 @@ class AutoSEODatabaseEditor {
                 'properties' => array(
                     'kind'    => array('type' => 'string', 'enum' => array('option', 'post_meta', 'term_meta', 'user_meta')),
                     'key'     => array('type' => 'string'),
-                    'value'   => array('description' => 'New value. Arrays and objects are stored serialised by WordPress.'),
+                    // Any JSON type. WordPress's schema validator requires a
+                    // type keyword and raises a PHP warning on every call
+                    // without one.
+                    'value'   => array(
+                        'type'        => array('string', 'number', 'integer', 'boolean', 'array', 'object', 'null'),
+                        'description' => 'New value. Arrays and objects are stored serialised by WordPress.',
+                    ),
                     'id'      => array('type' => 'integer'),
                     'dry_run' => array('type' => 'boolean', 'description' => 'Defaults to true.'),
                     'force'   => array('type' => 'boolean', 'description' => 'Required to write a guarded option such as siteurl or active_plugins.'),
