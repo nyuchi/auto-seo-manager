@@ -50,6 +50,15 @@ A run takes about ten seconds.
   administrator; every ability that takes `dry_run` changes nothing unless it
   is sent `dry_run: false`. On WordPress without the Abilities API (before
   6.9) it checks that the plugin loads and registers nothing.
+- `tests/integration/HeadMetaTest.php`: the head tags of #31. Pages are
+  rendered for real (`go_to()` and `wp_head`): nothing is printed next to
+  Yoast, Rank Math, All in One SEO or SEOPress (each a stand-in from
+  `tests/fixtures/seo-plugins`, loaded in a test that runs in its own
+  process), never a robots tag beside core's, `%%variables%%` are resolved,
+  the `fallback_meta_output` option is off by default, the
+  `auto_seo_external_seo_plugin_active` and `auto_seo_output_head_meta`
+  filters win, no head meta is stored next to Yoast, and DB upgrade 3
+  deletes the legacy meta.
 
 No test reaches the network: `tests/includes/class-asm-test-http.php` answers
 every request or refuses it.
