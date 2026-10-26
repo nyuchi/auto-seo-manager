@@ -12,6 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The plugin's admin screen ends with the repository's GitHub star count and a
+  link to star it, and the Plugins row gets a "Star on GitHub" link. The count
+  is an anonymous request for the public repository record, made only when
+  that screen is opened and cached for 12 hours (a failure for an hour, shown
+  without a number). It sends nothing about the site: no site URL, no version
+  numbers and no identifier. There is no telemetry. Hide it with
+  `define( 'AUTO_SEO_HIDE_STAR_COUNT', true );` or the
+  `auto_seo_show_star_count` filter.
+
 ### Changed
 
 - **Breaking requirement change:** the minimum PHP version is now 8.2 (was
