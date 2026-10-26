@@ -12,6 +12,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-10-26
+
+### Read before updating
+
+- **Your SEO plugin now owns the head tags.** While Yoast SEO, Rank Math, All
+  in One SEO or SEOPress is active, this plugin no longer prints any robots,
+  keywords, author, Open Graph or Twitter tags of its own. Before, pages could
+  carry two sets that disagreed, including an `index, follow` robots tag on
+  pages Yoast had marked `noindex`. Check your SEO plugin's settings, because
+  what it prints is now the only version search engines and social sites see.
+- **A one-way clean-up runs once.** On the first wp-admin page load after the
+  update (or on re-activation), the plugin deletes its own stored
+  `_auto_seo_robots`, `_auto_seo_keywords`, `_auto_seo_og_*` and
+  `_auto_seo_twitter_*` post meta from every post. Those values fed the
+  duplicate tags and some held raw `%%sitename%%` placeholders. This cannot be
+  undone from the plugin: take a database backup first if you want to keep
+  them. Your Yoast (or other SEO plugin) titles, descriptions and focus
+  keywords are not touched.
+- **PHP 8.2 or later is required.** Sites on PHP 8.1 or older must upgrade PHP
+  before updating.
+- **Security fix for sites with a GitHub token.** If you set
+  `AUTO_SEO_GITHUB_TOKEN`, earlier versions could send it to hosts other than
+  GitHub's API. Update, and consider replacing the token.
+
 ### Added
 
 - The plugin's admin screen ends with the repository's GitHub star count and a
@@ -28,8 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Breaking requirement change:** the minimum PHP version is now 8.2 (was
-  7.4). Sites on PHP 8.1 or older must upgrade PHP before updating; this ships
-  in the next minor release. There is no maximum PHP version.
+  7.4). Sites on PHP 8.1 or older must upgrade PHP before updating. There is
+  no maximum PHP version.
 - CI lints on PHP 8.2, 8.3, 8.4 and 8.5, and release jobs run on 8.3. GitHub
   Actions and the org reusable workflows (v0.7.0) are updated to their latest
   releases, still pinned by commit SHA, and Dependabot now proposes updates
