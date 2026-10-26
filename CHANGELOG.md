@@ -28,6 +28,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   wp-admin. WordPress runs update checks from wp-cron, automatic background
   updates, REST/MCP and WP-CLI, which never saw releases, so auto-updates did
   nothing. A release asset without a name no longer raises a PHP notice.
+- `AUTO_SEO_GITHUB_TOKEN` is sent only to this repository's GitHub API over
+  HTTPS. The check was a substring match, so any URL containing
+  `api.github.com/repos/nyuchi/auto-seo-manager` (on another host, in a query
+  string, or over plain http) also received it, and WordPress re-sent it to
+  GitHub's storage host when following the asset download redirect.
+- `db-write` no longer raises a PHP warning and a "doing it wrong" notice on
+  every call: its `value` input now declares a type.
+
+### Added
+
+- A PHPUnit suite on a real WordPress (SQLite, no MySQL) and a Tests workflow
+  running it on PHP 8.2 to 8.5. See TESTING.md.
 
 ## [1.9.0] - 2026-10-26
 

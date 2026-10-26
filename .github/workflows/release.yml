@@ -69,7 +69,13 @@ jobs:
             --exclude '.DS_Store' \
             --exclude 'CHANGELOG.md' \
             --exclude 'CONTRIBUTING.md' \
-            --exclude 'installation-guide.md'
+            --exclude 'installation-guide.md' \
+            --exclude 'vendor' \
+            --exclude 'tests' \
+            --exclude 'composer.json' \
+            --exclude 'composer.lock' \
+            --exclude 'phpunit.xml.dist' \
+            --exclude 'TESTING.md'
           cd build && zip -qr "../$slug.zip" "$slug"
           cd .. && unzip -l "$slug.zip" | tail -3
 
