@@ -94,6 +94,17 @@ lower the level to Actions.
 Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST API exposes
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
+= Does the plugin contact GitHub? =
+
+Yes, for two things, and neither sends anything about your site. The updater checks the
+repository's latest release so WordPress can offer updates. The Optimization screen shows
+the repository's GitHub star count with a link to star it; that is an anonymous request
+for the public repository record, made only when the screen is opened, cached for 12
+hours, and it carries no site URL, no version numbers and no identifier. There is no
+telemetry or usage ping. To hide the star count, add
+`define( 'AUTO_SEO_HIDE_STAR_COUNT', true );` to wp-config.php or return false from the
+`auto_seo_show_star_count` filter.
+
 == Changelog ==
 
 = 1.9.0 =

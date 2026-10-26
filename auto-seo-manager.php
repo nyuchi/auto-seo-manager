@@ -1865,3 +1865,15 @@ if (file_exists($auto_seo_updater_file)) {
         new AutoSEOUpdater(__FILE__);
     }
 }
+
+// The repository's GitHub star count and a star ask, shown in the footer of the
+// plugin's own screen. Loaded in wp-admin only, and the count is fetched only
+// when that screen renders. It sends nothing about the site; see the file.
+$auto_seo_stars_file = plugin_dir_path(__FILE__) . 'github-stars.php';
+if (is_admin() && file_exists($auto_seo_stars_file) && class_exists('AutoSEOUpdater')) {
+    require_once $auto_seo_stars_file;
+
+    if (class_exists('AutoSEOGitHubStars')) {
+        new AutoSEOGitHubStars(__FILE__);
+    }
+}
