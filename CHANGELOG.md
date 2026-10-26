@@ -10,6 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > into `staging` is a patch, a release to `main` is a minor, and a major is
 > only ever made by hand. Earlier versions are not renumbered.
 
+## [Unreleased]
+
+### Added
+
+- Two abilities for the Yoast SEO site-wide settings. `nyuchi-optimization/yoast-get-settings`
+  reads the `wpseo`, `wpseo_titles` and `wpseo_social` option groups, and
+  `nyuchi-optimization/yoast-update-settings` changes keys in one of them. Updates
+  are a dry run unless `dry_run` is sent as `false`, and secret-looking keys are
+  always refused.
+
 ## [1.1.0] - 2026-08-19
 
 The plugin is now called **Yoast SEO Addons**. The directory, the main file and
