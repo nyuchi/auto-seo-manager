@@ -4,7 +4,7 @@ Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.8.0
+Stable tag: 1.9.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -95,6 +95,12 @@ Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
 == Changelog ==
+
+= 1.9.0 =
+* New: two abilities for the Yoast SEO site-wide settings. yoast-get-settings reads the
+  wpseo, wpseo_titles and wpseo_social option groups; yoast-update-settings changes keys
+  in one of them. Updates are a dry run unless dry_run is false, and secret-looking keys
+  are always refused.
 
 = 1.8.0 =
 * Maintenance release. The README and installation guide are rewritten
