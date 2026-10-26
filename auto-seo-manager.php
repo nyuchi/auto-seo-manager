@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) {
 }
 
 define('AUTO_SEO_VERSION', '1.9.0');
-define('AUTO_SEO_DB_VERSION', 2);
+define('AUTO_SEO_DB_VERSION', 3);
 
 class AutoSEOManager {
 
@@ -45,6 +45,24 @@ class AutoSEOManager {
         'errors'  => 1,
         'actions' => 2,
         'verbose' => 3,
+    );
+
+    /**
+     * Post meta keys that held the plugin's own head tags up to 1.9.0
+     * (issue #31). The DB version 3 upgrade deletes them.
+     */
+    const LEGACY_HEAD_META_KEYS = array(
+        '_auto_seo_robots',
+        '_auto_seo_keywords',
+        '_auto_seo_og_title',
+        '_auto_seo_og_description',
+        '_auto_seo_og_image',
+        '_auto_seo_og_url',
+        '_auto_seo_og_type',
+        '_auto_seo_twitter_card',
+        '_auto_seo_twitter_title',
+        '_auto_seo_twitter_description',
+        '_auto_seo_twitter_image',
     );
 
     public function __construct() {
@@ -110,7 +128,11 @@ class AutoSEOManager {
         $this->create_log_table();
         $this->set_default_options();
         $this->schedule_seo_updates();
-        update_option('auto_seo_db_version', AUTO_SEO_DB_VERSION);
+
+        // Run any pending upgrade steps instead of only stamping the version.
+        // A site that is deactivated, updated and reactivated would otherwise
+        // skip the migrations between its old version and this one.
+        $this->maybe_upgrade_db();
         flush_rewrite_rules();
     }
 
@@ -178,6 +200,17 @@ class AutoSEOManager {
             }
         }
 
+        if ($installed < 3) {
+            // Issue #31: these post meta values fed the plugin's own robots,
+            // keywords, Open Graph and Twitter tags. They were printed next to
+            // Yoast's tags, and some hold unresolved Yoast templates such as
+            // "%%sitename%% - %%sitedesc%%". Nothing reads them while an SEO
+            // plugin is active, so they are removed rather than repaired.
+            foreach (self::LEGACY_HEAD_META_KEYS as $meta_key) {
+                delete_post_meta_by_key($meta_key);
+            }
+        }
+
         update_option('auto_seo_db_version', AUTO_SEO_DB_VERSION);
     }
     
@@ -212,6 +245,9 @@ class AutoSEOManager {
             'twitter_username' => '',
             'default_og_image' => '',
             'robots_default' => 'index, follow',
+            // Off by default: the plugin's own head tags are only a fallback for
+            // sites with no SEO plugin, and even then only when asked for.
+            'fallback_meta_output' => 0,
             'auto_generate_keywords' => 1,
             'auto_og_tags' => 1,
             'auto_twitter_cards' => 1,
@@ -340,8 +376,10 @@ class AutoSEOManager {
             }
         }
         
-        // Update additional meta tags
-        if (get_option('auto_seo_auto_additional_meta')) {
+        // Update additional meta tags. These only feed the fallback head
+        // output, which never runs while an SEO plugin prints its own tags, so
+        // storing them then would only fill the postmeta table.
+        if (get_option('auto_seo_auto_additional_meta') && !$this->external_seo_plugin_active()) {
             $this->update_additional_meta_tags($post_id);
             $updated = true;
         }
@@ -452,13 +490,9 @@ class AutoSEOManager {
             }
         }
         
-        // Store robots directive
-        $existing_robots = get_post_meta($post_id, '_auto_seo_robots', true);
-        if (empty($existing_robots)) {
-            $robots = get_option('auto_seo_robots_default', 'index, follow');
-            update_post_meta($post_id, '_auto_seo_robots', $robots);
-        }
-        
+        // No robots directive is stored or printed: robots belong to core's
+        // wp_robots and to the SEO plugin, and a second tag contradicts them.
+
         // Generate Open Graph data
         if (get_option('auto_seo_auto_og_tags')) {
             $this->update_og_meta_tags($post_id);
@@ -509,6 +543,7 @@ class AutoSEOManager {
         $og_title = get_post_meta($post_id, '_auto_seo_og_title', true);
         if (empty($og_title)) {
             $title = isset($og_data['title']) ? $og_data['title'] : get_post_meta($post_id, '_yoast_wpseo_title', true);
+            $title = $this->resolve_seo_vars($title, $post);
             if (empty($title)) {
                 $title = $post->post_title;
             }
@@ -519,6 +554,7 @@ class AutoSEOManager {
         $og_description = get_post_meta($post_id, '_auto_seo_og_description', true);
         if (empty($og_description)) {
             $description = isset($og_data['description']) ? $og_data['description'] : get_post_meta($post_id, '_yoast_wpseo_metadesc', true);
+            $description = $this->resolve_seo_vars($description, $post);
             if (empty($description)) {
                 $description = $this->generate_meta_description($post);
             }
@@ -561,7 +597,7 @@ class AutoSEOManager {
         // Twitter Title
         $twitter_title = get_post_meta($post_id, '_auto_seo_twitter_title', true);
         if (empty($twitter_title)) {
-            $title = get_post_meta($post_id, '_yoast_wpseo_title', true);
+            $title = $this->resolve_seo_vars(get_post_meta($post_id, '_yoast_wpseo_title', true), $post);
             if (empty($title)) {
                 $title = $post->post_title;
             }
@@ -571,7 +607,7 @@ class AutoSEOManager {
         // Twitter Description
         $twitter_description = get_post_meta($post_id, '_auto_seo_twitter_description', true);
         if (empty($twitter_description)) {
-            $description = get_post_meta($post_id, '_yoast_wpseo_metadesc', true);
+            $description = $this->resolve_seo_vars(get_post_meta($post_id, '_yoast_wpseo_metadesc', true), $post);
             if (empty($description)) {
                 $description = $this->generate_meta_description($post);
             }
@@ -607,7 +643,105 @@ class AutoSEOManager {
         return isset($matches[1]) ? $matches[1] : '';
     }
     
+    /**
+     * Whether another SEO plugin is printing the head tags.
+     *
+     * Yoast SEO, Rank Math, All in One SEO and SEOPress each print robots,
+     * canonical, Open Graph and Twitter tags. When any of them is active the
+     * plugin must print none of its own, or the page carries two conflicting
+     * sets (issue #31).
+     *
+     * Filter `auto_seo_external_seo_plugin_active` to override the detection,
+     * for example for an SEO plugin not listed here.
+     *
+     * @return bool
+     */
+    public function external_seo_plugin_active() {
+        $active = defined('WPSEO_VERSION') || class_exists('WPSEO_Options')   // Yoast SEO
+            || defined('RANK_MATH_VERSION') || class_exists('RankMath')       // Rank Math
+            || defined('AIOSEO_VERSION') || function_exists('aioseo')         // All in One SEO
+            || defined('SEOPRESS_VERSION');                                    // SEOPress
+
+        return (bool) apply_filters('auto_seo_external_seo_plugin_active', $active);
+    }
+
+    /**
+     * Whether the plugin's own fallback head tags should be printed.
+     *
+     * Only when no SEO plugin is active and the fallback_meta_output option
+     * (off by default) is on. Filter `auto_seo_output_head_meta` has the final
+     * say.
+     *
+     * @return bool
+     */
+    public function should_output_head_meta() {
+        $output = (bool) get_option('auto_seo_fallback_meta_output', 0)
+            && !$this->external_seo_plugin_active();
+
+        return (bool) apply_filters('auto_seo_output_head_meta', $output);
+    }
+
+    /**
+     * Resolve Yoast-style %%variables%% in a title or description.
+     *
+     * Uses Yoast's own wpseo_replace_vars() when it is loaded, then replaces
+     * the common variables itself, then drops any %%variable%% still left so
+     * a raw placeholder can never reach the page.
+     *
+     * @param mixed        $text Text that may contain %%variables%%.
+     * @param WP_Post|null $post Post the variables refer to.
+     * @return string
+     */
+    public function resolve_seo_vars($text, $post = null) {
+        if (!is_string($text) || '' === $text) {
+            return '';
+        }
+
+        if (false === strpos($text, '%%')) {
+            return $text;
+        }
+
+        if (function_exists('wpseo_replace_vars')) {
+            $text = (string) wpseo_replace_vars($text, $post ? $post : array());
+        }
+
+        if (false !== strpos($text, '%%')) {
+            $text = strtr($text, array(
+                '%%title%%'       => $post ? (string) $post->post_title : '',
+                '%%sitename%%'    => (string) get_bloginfo('name'),
+                '%%sitedesc%%'    => (string) get_bloginfo('description'),
+                '%%sep%%'         => '-',
+                '%%currentyear%%' => gmdate('Y'),
+            ));
+            $text = (string) preg_replace('/%%[^%\s]+%%/', '', $text);
+            // Tidy what an emptied variable leaves: doubled spaces and a
+            // separator stranded at either end.
+            // The /u patterns return null on invalid UTF-8; keep the text then.
+            $text = preg_replace('/\s{2,}/u', ' ', $text) ?? $text;
+            $text = preg_replace('/^[\s|\-\x{2013}\x{2014}]+|[\s|\-\x{2013}\x{2014}]+$/u', '', $text) ?? trim($text);
+        }
+
+        return $text;
+    }
+
     public function output_additional_meta_tags() {
+        // Google only looks for the verification tag on the home page, and an
+        // identical second copy is harmless, so this one tag is printed
+        // whenever the option is set.
+        if (is_front_page() || is_home()) {
+            $google_verification = get_option('auto_seo_google_site_verification');
+            if ($google_verification) {
+                echo '<meta name="google-site-verification" content="' . esc_attr($google_verification) . '">' . "\n";
+            }
+        }
+
+        // Never print robots, Open Graph or Twitter tags next to an SEO
+        // plugin's own (issue #31). No robots tag is printed in any case:
+        // robots belong to core's wp_robots and to the SEO plugin.
+        if (!$this->should_output_head_meta()) {
+            return;
+        }
+
         if (!is_singular()) {
             $this->output_global_meta_tags();
             return;
@@ -635,18 +769,11 @@ class AutoSEOManager {
     private function output_global_meta_tags() {
         // Global meta tags for non-singular pages
         $author = get_option('auto_seo_site_author');
-        $google_verification = get_option('auto_seo_google_site_verification');
         $twitter_site = get_option('auto_seo_twitter_username');
         
         if ($author) {
             echo '<meta name="author" content="' . esc_attr($author) . '">' . "\n";
         }
-        
-        if ($google_verification) {
-            echo '<meta name="google-site-verification" content="' . esc_attr($google_verification) . '">' . "\n";
-        }
-        
-        echo '<meta name="robots" content="index, follow">' . "\n";
         
         if ($twitter_site) {
             echo '<meta name="twitter:site" content="@' . esc_attr(ltrim($twitter_site, '@')) . '">' . "\n";
@@ -665,25 +792,12 @@ class AutoSEOManager {
         if ($author) {
             echo '<meta name="author" content="' . esc_attr($author) . '">' . "\n";
         }
-        
-        // Robots
-        $robots = get_post_meta($post_id, '_auto_seo_robots', true);
-        if ($robots) {
-            echo '<meta name="robots" content="' . esc_attr($robots) . '">' . "\n";
-        }
-        
-        // Google Site Verification (only on homepage)
-        if (is_home() || is_front_page()) {
-            $google_verification = get_option('auto_seo_google_site_verification');
-            if ($google_verification) {
-                echo '<meta name="google-site-verification" content="' . esc_attr($google_verification) . '">' . "\n";
-            }
-        }
     }
     
     private function output_og_meta_tags($post_id) {
-        $og_title = get_post_meta($post_id, '_auto_seo_og_title', true);
-        $og_description = get_post_meta($post_id, '_auto_seo_og_description', true);
+        $post = get_post($post_id);
+        $og_title = $this->resolve_seo_vars(get_post_meta($post_id, '_auto_seo_og_title', true), $post);
+        $og_description = $this->resolve_seo_vars(get_post_meta($post_id, '_auto_seo_og_description', true), $post);
         $og_image = get_post_meta($post_id, '_auto_seo_og_image', true);
         $og_url = get_post_meta($post_id, '_auto_seo_og_url', true);
         $og_type = get_post_meta($post_id, '_auto_seo_og_type', true);
@@ -713,8 +827,9 @@ class AutoSEOManager {
     
     private function output_twitter_meta_tags($post_id) {
         $twitter_card = get_post_meta($post_id, '_auto_seo_twitter_card', true);
-        $twitter_title = get_post_meta($post_id, '_auto_seo_twitter_title', true);
-        $twitter_description = get_post_meta($post_id, '_auto_seo_twitter_description', true);
+        $post = get_post($post_id);
+        $twitter_title = $this->resolve_seo_vars(get_post_meta($post_id, '_auto_seo_twitter_title', true), $post);
+        $twitter_description = $this->resolve_seo_vars(get_post_meta($post_id, '_auto_seo_twitter_description', true), $post);
         $twitter_image = get_post_meta($post_id, '_auto_seo_twitter_image', true);
         $twitter_site = get_option('auto_seo_twitter_username');
         
@@ -1240,8 +1355,8 @@ class AutoSEOManager {
         // Save additional meta settings
         $meta_settings = array(
             'auto_additional_meta' => isset($_POST['auto_additional_meta']) ? 1 : 0,
+            'fallback_meta_output' => isset($_POST['fallback_meta_output']) ? 1 : 0,
             'site_author' => isset($_POST['site_author']) ? sanitize_text_field($_POST['site_author']) : '',
-            'robots_default' => isset($_POST['robots_default']) ? sanitize_text_field($_POST['robots_default']) : 'index, follow',
             'auto_generate_keywords' => isset($_POST['auto_generate_keywords']) ? 1 : 0,
             'auto_og_tags' => isset($_POST['auto_og_tags']) ? 1 : 0,
             'default_og_image' => isset($_POST['default_og_image']) ? esc_url_raw($_POST['default_og_image']) : '',
@@ -1373,6 +1488,7 @@ class AutoSEOManager {
             'auto_og_tags'                  => 'bool',
             'auto_twitter_cards'            => 'bool',
             'auto_additional_meta'          => 'bool',
+            'fallback_meta_output'          => 'bool',
             'daily_updates_enabled'         => 'bool',
             'weekly_audit_enabled'          => 'bool',
             'audit_email_enabled'           => 'bool',
