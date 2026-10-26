@@ -31,7 +31,13 @@ function asm_test_core_dir() {
         $dir = rtrim(sys_get_temp_dir(), '/\\') . '/wordpress-tests';
     }
 
-    return rtrim($dir, '/\\');
+    $dir = rtrim($dir, '/\\');
+
+    // Canonical: WordPress will not create directories under a path that
+    // contains "..".
+    $real = realpath($dir);
+
+    return $real ? $real : $dir;
 }
 
 /**

@@ -21,6 +21,12 @@ if [ -f "$WP_CORE_DIR/wp-settings.php" ] && [ -f "$WP_CORE_DIR/wp-content/db.php
   exit 0
 fi
 
+# Canonical path: WordPress refuses to create directories under a path that
+# contains "..", so a WP_CORE_DIR like "$GITHUB_WORKSPACE/../x" would leave
+# wp-content/uploads missing and every test erroring.
+mkdir -p "$WP_CORE_DIR"
+WP_CORE_DIR="$(cd "$WP_CORE_DIR" && pwd -P)"
+
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
@@ -52,6 +58,6 @@ sed -e "s#{SQLITE_IMPLEMENTATION_FOLDER_PATH}#${sqlite_dir}#" \
   -e "s#{SQLITE_PLUGIN}#sqlite-database-integration/load.php#" \
   "$sqlite_dir/db.copy" > "$WP_CORE_DIR/wp-content/db.php"
 
-mkdir -p "$WP_CORE_DIR/wp-content/database"
+mkdir -p "$WP_CORE_DIR/wp-content/database" "$WP_CORE_DIR/wp-content/uploads"
 
 echo "WordPress $(sed -n "s/^\$wp_version = '\(.*\)';/\1/p" "$WP_CORE_DIR/wp-includes/version.php") ready in $WP_CORE_DIR"
