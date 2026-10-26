@@ -9,6 +9,8 @@ updates:
     target-branch: staging
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       actions-minor-patch:
         update-types:

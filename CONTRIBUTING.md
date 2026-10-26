@@ -502,6 +502,9 @@ upper limit.
 - **Dependencies**: never add an upper bound such as `<9` to a `composer.json`
   or `package.json` constraint, and never add a `Tested up to` style cap that
   blocks anything. Raise a floor only when the code needs it.
+- **Dependabot cooldown**: `.github/dependabot.yml` sets `cooldown` to 7 days,
+  a supply-chain safeguard. It only delays proposing non-security updates by
+  7 days and never blocks them. Security updates are not subject to cooldown.
 - **GitHub Actions** stay pinned to a full commit SHA with the release tag in a
   comment, for example `actions/checkout@<sha>  # v7.0.1`. That pin is how
   Actions are secured, and Dependabot proposes the newer pin.
