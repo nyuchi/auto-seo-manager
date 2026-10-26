@@ -165,7 +165,7 @@ class AutoSEOUpdater {
             'url'           => $release['url'],
             'package'       => $this->token() && !empty($release['api_url']) ? $release['api_url'] : $release['package'],
             'tested'        => '',
-            'requires_php'  => '7.4',
+            'requires_php'  => '8.2',
         );
 
         if (!isset($transient->response) || !is_array($transient->response)) {
@@ -201,7 +201,7 @@ class AutoSEOUpdater {
             'version'       => $release['version'],
             'author'        => '<a href="https://nyuchi.com">Nyuchi Web Services</a>',
             'homepage'      => $release['url'],
-            'requires_php'  => '7.4',
+            'requires_php'  => '8.2',
             'last_updated'  => $release['published'],
             'sections'      => array(
                 'description' => 'SEO, metadata, and database cleaning and editing for WordPress. Automates Yoast SEO fields, reports what is costing the database, repairs attachments whose file and record disagree, and exposes the lot to the REST API and to MCP clients.',
