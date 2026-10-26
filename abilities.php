@@ -75,7 +75,7 @@ class AutoSEOAbilities {
             self::CATEGORY,
             array(
                 'label'       => 'Nyuchi WordPress Optimization',
-                'description' => 'Site optimization in three parts. SEO: automated generation of Yoast SEO fields - titles, meta descriptions, focus keywords, Open Graph and Twitter card tags - with an activity log of every field written. Metadata: inspection and correction across post types. Database: per-table size and overhead, counts of rows nothing reads any more, the autoloaded options paid for on every request, and bounded cleanup of each.',
+                'description' => 'Site optimization in three parts. SEO: automated generation of Yoast SEO fields - titles, meta descriptions, focus keywords, Open Graph and Twitter card tags - with an activity log of every field written, and read and update access to the site-wide Yoast SEO settings. Metadata: inspection and correction across post types. Database: per-table size and overhead, counts of rows nothing reads any more, the autoloaded options paid for on every request, and bounded cleanup of each.',
             )
         );
     }
@@ -100,6 +100,8 @@ class AutoSEOAbilities {
         $this->register_generate_seo();
         $this->register_get_activity_log();
         $this->register_prune_activity_log();
+        $this->register_get_yoast_settings();
+        $this->register_update_yoast_settings();
     }
 
     /**
@@ -460,6 +462,154 @@ class AutoSEOAbilities {
         );
     }
 
+    /**
+     * nyuchi-optimization/yoast-get-settings
+     */
+    private function register_get_yoast_settings() {
+        $this->register(
+            self::PREFIX . 'yoast-get-settings',
+            array(
+                'label'       => 'Get Yoast SEO site-wide settings',
+                'description' => 'Read the current values of the Yoast SEO option groups wpseo (general and webmaster tools), wpseo_titles (title and separator templates, noindex rules) and wpseo_social (Open Graph and social profile settings). Read-only. Secret-looking keys are never returned. If Yoast SEO is not active, yoast_active is false and groups is empty. Call this before yoast-update-settings so you know the exact key names and current values.',
+                'category'    => self::CATEGORY,
+                'input_schema' => array(
+                    'type'       => 'object',
+                    'properties' => array(
+                        'groups' => array(
+                            'type'        => 'array',
+                            'description' => 'Which Yoast option groups to read. Omit to read all three.',
+                            'items'       => array(
+                                'type' => 'string',
+                                'enum' => $this->yoast_groups(),
+                            ),
+                            'uniqueItems' => true,
+                            'default'     => $this->yoast_groups(),
+                        ),
+                    ),
+                    'additionalProperties' => false,
+                ),
+                'output_schema' => array(
+                    'type'       => 'object',
+                    'properties' => array(
+                        'yoast_active' => array(
+                            'type'        => 'boolean',
+                            'description' => 'Whether Yoast SEO is active. False means groups is empty and nothing can be read or changed.',
+                        ),
+                        'groups'       => array(
+                            'type'                 => 'object',
+                            'description'          => 'Values of each requested group, keyed by group name and then by Yoast option key. Keys containing key, token, secret or password are omitted.',
+                            'additionalProperties' => array(
+                                'type'                 => 'object',
+                                'additionalProperties' => true,
+                            ),
+                        ),
+                    ),
+                    'required'   => array('yoast_active', 'groups'),
+                ),
+                'execute_callback'    => array($this, 'execute_get_yoast_settings'),
+                'permission_callback' => array($this, 'can_manage'),
+                'meta'                => array(
+                    'readonly' => true,
+                ),
+            )
+        );
+    }
+
+    /**
+     * nyuchi-optimization/yoast-update-settings
+     */
+    private function register_update_yoast_settings() {
+        $this->register(
+            self::PREFIX . 'yoast-update-settings',
+            array(
+                'label'       => 'Update Yoast SEO site-wide settings',
+                'description' => 'Change individual keys in one Yoast SEO option group. Runs as a dry run unless dry_run is sent as false: a dry run reports what would change and writes nothing, so review it before applying. Only keys that already exist in the group are accepted, and keys that look like secrets (containing key, token, secret or password) are always refused. Refused keys are listed with a reason rather than failing the whole call. These settings are site-wide and change the SEO output of every page, so read yoast-get-settings first.',
+                'category'    => self::CATEGORY,
+                'input_schema' => array(
+                    'type'       => 'object',
+                    'properties' => array(
+                        'group'   => array(
+                            'type'        => 'string',
+                            'enum'        => $this->yoast_groups(),
+                            'description' => 'The Yoast option group the keys belong to: wpseo, wpseo_titles or wpseo_social.',
+                        ),
+                        'changes' => array(
+                            'type'                 => 'object',
+                            'description'          => 'Map of Yoast option key to its new value. Keys must already exist in the group.',
+                            'additionalProperties' => true,
+                            'minProperties'        => 1,
+                        ),
+                        'dry_run' => array(
+                            'type'        => 'boolean',
+                            'default'     => true,
+                            'description' => 'True (the default) reports what would change and writes nothing. Send false to apply the changes.',
+                        ),
+                    ),
+                    'required'             => array('group', 'changes'),
+                    'additionalProperties' => false,
+                ),
+                'output_schema' => array(
+                    'type'       => 'object',
+                    'properties' => array(
+                        'dry_run'   => array(
+                            'type'        => 'boolean',
+                            'description' => 'Whether this call was a dry run. When true, applied lists the changes that would be made and the to values are the requested ones, not what is stored.',
+                        ),
+                        'group'     => array(
+                            'type'        => 'string',
+                            'description' => 'The option group the call targeted.',
+                        ),
+                        'applied'   => array(
+                            'type'        => 'array',
+                            'description' => 'Keys changed, or that would change in a dry run. from is the value before the call; to is the value read back from Yoast after the write, or the requested value in a dry run.',
+                            'items'       => array(
+                                'type'       => 'object',
+                                'properties' => array(
+                                    'key'  => array(
+                                        'type'        => 'string',
+                                        'description' => 'Yoast option key.',
+                                    ),
+                                    'from' => array(
+                                        'description' => 'Value before the change.',
+                                    ),
+                                    'to'   => array(
+                                        'description' => 'Value after the change.',
+                                    ),
+                                ),
+                            ),
+                        ),
+                        'refused'   => array(
+                            'type'        => 'array',
+                            'description' => 'Submitted keys that were not written, each with a reason: secret for secret-looking keys, unknown_key for keys not present in the group.',
+                            'items'       => array(
+                                'type'       => 'object',
+                                'properties' => array(
+                                    'key'    => array(
+                                        'type'        => 'string',
+                                        'description' => 'The submitted key.',
+                                    ),
+                                    'reason' => array(
+                                        'type'        => 'string',
+                                        'enum'        => array('secret', 'unknown_key'),
+                                        'description' => 'Why the key was refused.',
+                                    ),
+                                ),
+                            ),
+                        ),
+                        'unchanged' => array(
+                            'type'        => 'array',
+                            'description' => 'Accepted keys whose submitted value already matched the stored value.',
+                            'items'       => array('type' => 'string'),
+                        ),
+                    ),
+                    'required'   => array('dry_run', 'group', 'applied', 'refused', 'unchanged'),
+                ),
+                'execute_callback'    => array($this, 'execute_update_yoast_settings'),
+                'permission_callback' => array($this, 'can_manage'),
+            )
+        );
+    }
+
     /* ---------------------------------------------------------------------
      * Permission callbacks
      * ------------------------------------------------------------------ */
@@ -658,6 +808,117 @@ class AutoSEOAbilities {
         );
     }
 
+    /**
+     * @param array $input Ability input.
+     * @return array|WP_Error
+     */
+    public function execute_get_yoast_settings($input = array()) {
+        // Not an error: a site without Yoast gets a valid, empty answer so the
+        // caller can report the state rather than handle a failure.
+        if (!$this->yoast_available()) {
+            return array(
+                'yoast_active' => false,
+                'groups'       => (object) array(),
+            );
+        }
+
+        $groups = array();
+
+        foreach ($this->yoast_requested_groups($input) as $group) {
+            $groups[$group] = $this->yoast_group_values($group);
+        }
+
+        return array(
+            'yoast_active' => true,
+            'groups'       => (object) $groups,
+        );
+    }
+
+    /**
+     * Writes through WPSEO_Options::set() one key at a time, and only when the
+     * caller has sent dry_run as false. Anything else, including an absent
+     * dry_run, is a dry run, so a call that forgets the flag cannot write.
+     *
+     * @param array $input Ability input.
+     * @return array|WP_Error
+     */
+    public function execute_update_yoast_settings($input = array()) {
+        if (!$this->yoast_available()) {
+            return new WP_Error(
+                'auto_seo_yoast_missing',
+                'Yoast SEO is not active, so its settings cannot be changed.',
+                array('status' => 409)
+            );
+        }
+
+        $group = is_array($input) && isset($input['group']) ? (string) $input['group'] : '';
+
+        if (!in_array($group, $this->yoast_groups(), true)) {
+            return new WP_Error(
+                'auto_seo_bad_group',
+                sprintf('Unknown Yoast option group "%s". Use one of: %s.', $group, implode(', ', $this->yoast_groups())),
+                array('status' => 400)
+            );
+        }
+
+        $changes = is_array($input) && isset($input['changes']) && is_array($input['changes']) ? $input['changes'] : array();
+
+        if (empty($changes)) {
+            return new WP_Error(
+                'auto_seo_no_settings',
+                'Provide at least one Yoast setting to change.',
+                array('status' => 400)
+            );
+        }
+
+        $dry_run = !(isset($input['dry_run']) && (false === $input['dry_run'] || 'false' === $input['dry_run']));
+
+        $current   = $this->yoast_group_values($group);
+        $applied   = array();
+        $refused   = array();
+        $unchanged = array();
+
+        foreach ($changes as $key => $value) {
+            $key = (string) $key;
+
+            if ($this->is_secret_key($key)) {
+                $refused[] = array('key' => $key, 'reason' => 'secret');
+                continue;
+            }
+
+            if (!array_key_exists($key, $current)) {
+                $refused[] = array('key' => $key, 'reason' => 'unknown_key');
+                continue;
+            }
+
+            $from = $current[$key];
+
+            if ($from === $value) {
+                $unchanged[] = $key;
+                continue;
+            }
+
+            if ($dry_run) {
+                $applied[] = array('key' => $key, 'from' => $from, 'to' => $value);
+                continue;
+            }
+
+            WPSEO_Options::set($key, $value, $group);
+
+            // Read back rather than echo the request, so "to" is what Yoast
+            // actually stored after its own sanitising.
+            $applied[] = array('key' => $key, 'from' => $from, 'to' => WPSEO_Options::get($key, null, array($group)));
+        }
+
+        return array(
+            'dry_run'   => $dry_run,
+            'group'     => $group,
+            'applied'   => $applied,
+            'refused'   => $refused,
+            'unchanged' => $unchanged,
+        );
+    }
+
     /* ---------------------------------------------------------------------
      * Helpers
      * ------------------------------------------------------------------ */
@@ -800,6 +1061,87 @@ class AutoSEOAbilities {
                 ),
             ),
         );
+    }
+
+    /**
+     * Yoast option groups the Yoast abilities may read and write.
+     *
+     * Limited to the three groups the plugin's own settings screens touch, so
+     * a caller cannot reach Yoast's sitemap, redirect or internal groups.
+     *
+     * @return array
+     */
+    private function yoast_groups() {
+        return array('wpseo', 'wpseo_titles', 'wpseo_social');
+    }
+
+    /**
+     * Whether Yoast SEO's option API is loaded.
+     *
+     * @return bool
+     */
+    private function yoast_available() {
+        return class_exists('WPSEO_Options');
+    }
+
+    /**
+     * Groups named in a get-settings call, defaulting to all of them.
+     *
+     * @param array $input Ability input.
+     * @return array
+     */
+    private function yoast_requested_groups($input) {
+        if (!is_array($input) || empty($input['groups']) || !is_array($input['groups'])) {
+            return $this->yoast_groups();
+        }
+
+        return array_values(array_intersect($this->yoast_groups(), $input['groups']));
+    }
+
+    /**
+     * Current values of one Yoast option group, with secret-looking keys
+     * removed. Read through WPSEO_Options so Yoast's own defaults apply.
+     *
+     * @param string $group One of yoast_groups().
+     * @return array Option key => value.
+     */
+    private function yoast_group_values($group) {
+        // get_option() returns one option's array. get_all() takes a list of
+        // option names, not a group string, so it is not used here.
+        $values = WPSEO_Options::get_option($group);
+
+        if (!is_array($values)) {
+            return array();
+        }
+
+        $out = array();
+
+        foreach ($values as $key => $value) {
+            if ($this->is_secret_key((string) $key)) {
+                continue;
+            }
+
+            $out[(string) $key] = $value;
+        }
+
+        return $out;
+    }
+
+    /**
+     * Keys that look like credentials. Matched anywhere in the name, so a
+     * verification or API token key is caught even when its name is unusual.
+     *
+     * @param string $key Option key.
+     * @return bool
+     */
+    private function is_secret_key($key) {
+        foreach (array('key', 'token', 'secret', 'password') as $needle) {
+            if (false !== stripos($key, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
