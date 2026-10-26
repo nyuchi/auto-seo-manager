@@ -3,8 +3,8 @@ Contributors: nyuchi
 Tags: seo, database, cleanup, metadata, automation
 Requires at least: 5.0
 Tested up to: 7.0
-Requires PHP: 7.4
-Stable tag: 1.9.0
+Requires PHP: 8.2
+Stable tag: 1.10.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ SEO, metadata, and database cleaning and editing. Fills empty Yoast SEO fields, 
 
 == Description ==
 
-Nyuchi SEO Addons writes into the Yoast SEO title, meta description and focus keyword
+Nyuchi WordPress Optimization writes into the Yoast SEO title, meta description and focus keyword
 fields when they have been left empty. It is aimed at sites where the content volume has
 outgrown the effort available to hand-write every field, and where a consistent template is
 preferable to a blank.
@@ -77,6 +77,17 @@ keywords are left alone.
 No. It writes into Yoast's fields and depends on Yoast being active. Yoast remains the
 source of truth for output, sitemaps and analysis.
 
+= Does it print its own meta tags? =
+
+Not while Yoast SEO, Rank Math, All in One SEO or SEOPress is active: those plugins print
+the robots, canonical, Open Graph and Twitter tags, and a second set would conflict with
+theirs. The only tag it may add is the Google site verification tag on the home page, when
+that setting is filled in. On a site with no SEO plugin, its author, keywords, Open Graph
+and Twitter tags can be turned on with **Print fallback meta tags**, which is off by
+default. It never prints a robots tag. Developers can override the detection with the
+`auto_seo_external_seo_plugin_active` filter, or the final decision with
+`auto_seo_output_head_meta`.
+
 = Why is the activity log empty? =
 
 Either nothing has run yet, or the log level is set to Off or Errors. The default level,
@@ -94,7 +105,48 @@ lower the level to Actions.
 Yes. The Tools tab shows a secret cron URL for external schedulers, and the REST API exposes
 a run endpoint for authenticated clients. Treat the cron URL as a credential.
 
+= Does the plugin contact GitHub? =
+
+Yes, for two things, and neither sends anything about your site. The updater checks the
+repository's latest release so WordPress can offer updates. The Optimization screen shows
+the repository's GitHub star count with a link to star it; that is an anonymous request
+for the public repository record, made only when the screen is opened, cached for 12
+hours, and it carries no site URL, no version numbers and no identifier. There is no
+telemetry or usage ping. To hide the star count, add
+`define( 'AUTO_SEO_HIDE_STAR_COUNT', true );` to wp-config.php or return false from the
+`auto_seo_show_star_count` filter.
+
 == Changelog ==
+
+= 1.10.0 =
+* Important: while Yoast SEO, Rank Math, All in One SEO or SEOPress is active, the plugin
+  no longer prints its own robots, keywords, author, Open Graph or Twitter tags. Pages had
+  two og:title, og:description, og:site_name and twitter:site tags, and search and 404
+  pages had an "index, follow" robots tag that contradicted Yoast's noindex. Your SEO
+  plugin now owns these tags.
+* Important, one-way clean-up: on the first wp-admin page load after the update (or on
+  re-activation) the plugin deletes its stored _auto_seo_robots, _auto_seo_keywords,
+  _auto_seo_og_* and _auto_seo_twitter_* post meta. They held the duplicated values and
+  some held raw %%sitename%% placeholders. This cannot be undone from the plugin, so back
+  up the database first if you want them. Yoast titles, descriptions and focus keywords
+  are not touched.
+* The plugin never prints a robots tag, and the robots_default setting is ignored. Robots
+  are left to WordPress and your SEO plugin.
+* Yoast %%variables%% are resolved before a Yoast title or description is reused, and any
+  left over are removed, so a raw placeholder can no longer reach og:title or
+  twitter:title.
+* New setting, Print fallback meta tags (fallback_meta_output), off by default: prints the
+  plugin's own author, keywords, Open Graph and Twitter tags on sites with no SEO plugin.
+* Fixed: updates from GitHub are now found by wp-cron, automatic background updates,
+  REST and WP-CLI, not only on wp-admin pages, so automatic updates work. A release asset
+  without a name no longer raises a PHP notice.
+* Requirement change: PHP 8.2 or later (was 7.4). There is no maximum.
+* New: the plugin's admin screen shows the repository's GitHub star count with a link to
+  star it, and the Plugins row gets a "Star on GitHub" link. The request is anonymous,
+  sends nothing about the site and is cached for 12 hours. Hide it with
+  AUTO_SEO_HIDE_STAR_COUNT or the auto_seo_show_star_count filter.
+* Maintenance: CI checks PHP 8.2 to 8.5, GitHub Actions are updated and pinned by commit,
+  and Dependabot proposes updates weekly.
 
 = 1.9.0 =
 * New: two abilities for the Yoast SEO site-wide settings. yoast-get-settings reads the
@@ -323,6 +375,12 @@ a run endpoint for authenticated clients. Treat the cron URL as a credential.
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.10.0 =
+Requires PHP 8.2. Your SEO plugin (Yoast, Rank Math, AIOSEO or SEOPress) now
+owns the head tags. The first wp-admin page load after updating deletes this
+plugin's stored robots, keywords, Open Graph and Twitter post meta for good, so
+back up the database first if you want to keep them.
 
 = 1.7.1 =
 Fixes silent data corruption in db-write and db-replace. If you wrote a value

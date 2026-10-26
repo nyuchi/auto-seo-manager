@@ -247,10 +247,14 @@ if (!class_exists('AutoSEODatabase')) {
 
             <section class="nyx-card nyx-span-2">
                 <h2>Meta output</h2>
-                <p class="nyx-card-sub">Tags written into <code>wp_head</code> on single posts.</p>
+                <p class="nyx-card-sub">Fallback tags for sites with no SEO plugin. While Yoast SEO, Rank Math,
+                    All in One SEO or SEOPress is active the plugin prints none of these, and it never prints a
+                    robots tag.</p>
                 <?php
+                auto_seo_switch('fallback_meta_output', get_option('auto_seo_fallback_meta_output'),
+                    'Print fallback meta tags', 'Author, keywords, Open Graph and Twitter tags in wp_head. Only takes effect when no SEO plugin is active.');
                 auto_seo_switch('auto_additional_meta', get_option('auto_seo_auto_additional_meta'),
-                    'Additional meta tags', 'Author, robots and generic tags.');
+                    'Additional meta tags', 'Store author, keywords, Open Graph and Twitter values during a generation run.');
                 auto_seo_switch('auto_og_tags', get_option('auto_seo_auto_og_tags'),
                     'Open Graph tags');
                 auto_seo_switch('auto_twitter_cards', get_option('auto_seo_auto_twitter_cards'),
@@ -261,11 +265,6 @@ if (!class_exists('AutoSEODatabase')) {
                         <label for="site_author">Site author</label>
                         <input type="text" id="site_author" name="site_author"
                                value="<?php echo esc_attr(get_option('auto_seo_site_author')); ?>">
-                    </div>
-                    <div class="nyx-field">
-                        <label for="robots_default">Default robots directive</label>
-                        <input type="text" id="robots_default" name="robots_default" class="nyx-mono"
-                               value="<?php echo esc_attr(get_option('auto_seo_robots_default', 'index, follow')); ?>">
                     </div>
                     <div class="nyx-field">
                         <label for="twitter_username">Twitter username</label>
@@ -670,6 +669,8 @@ if (!class_exists('AutoSEODatabase')) {
     </div><?php // /database ?>
     <?php endif; ?>
 
+    <?php if (class_exists('AutoSEOGitHubStars')) { AutoSEOGitHubStars::render(); } ?>
+
 </div>
 
 <style>
@@ -950,6 +951,15 @@ if (!class_exists('AutoSEODatabase')) {
 .nyx-dim { color: var(--nyx-faint); }
 .nyx-empty { color: var(--nyx-faint); margin: 0; }
 .nyx code { background: var(--nyx-sunken); border-radius: 4px; padding: 1px 5px; font-size: 12px; }
+
+/* GitHub star ask — quiet footer, not a notice */
+.nyx-stars {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 18px;
+    margin-top: 28px; padding: 14px 20px; border: 1px solid var(--nyx-border);
+    border-radius: var(--nyx-r-card); background: var(--nyx-surface); color: var(--nyx-muted);
+}
+.nyx-stars p { margin: 0; max-width: 72ch; }
+.nyx-stars strong { color: var(--nyx-ink); font-weight: 600; }
 </style>
 
 <script>

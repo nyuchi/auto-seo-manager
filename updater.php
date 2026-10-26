@@ -7,6 +7,10 @@
  * into WordPress's own update machinery: the admin shows "update available"
  * and the one-click update works exactly as it does for a directory plugin.
  *
+ * The hooks are registered on every request, not only in wp-admin, because
+ * WordPress checks for updates from wp-cron, from automatic background
+ * updates, over REST and from WP-CLI as well.
+ *
  * Deliberately self-contained rather than vendoring an update library. The
  * whole mechanism is one API call and two filters, and keeping it visible
  * means the auth path for a private repository is auditable.
@@ -122,7 +126,7 @@ class AutoSEOUpdater {
         // WordPress will not recognise as an update of this one.
         if (!empty($body['assets']) && is_array($body['assets'])) {
             foreach ($body['assets'] as $asset) {
-                if (!empty($asset['browser_download_url']) && substr($asset['name'], -4) === '.zip') {
+                if (!empty($asset['browser_download_url']) && isset($asset['name']) && substr((string) $asset['name'], -4) === '.zip') {
                     $release['package'] = $asset['browser_download_url'];
                     $release['api_url'] = isset($asset['url']) ? $asset['url'] : '';
                     break;
@@ -161,7 +165,7 @@ class AutoSEOUpdater {
             'url'           => $release['url'],
             'package'       => $this->token() && !empty($release['api_url']) ? $release['api_url'] : $release['package'],
             'tested'        => '',
-            'requires_php'  => '7.4',
+            'requires_php'  => '8.2',
         );
 
         if (!isset($transient->response) || !is_array($transient->response)) {
@@ -197,7 +201,7 @@ class AutoSEOUpdater {
             'version'       => $release['version'],
             'author'        => '<a href="https://nyuchi.com">Nyuchi Web Services</a>',
             'homepage'      => $release['url'],
-            'requires_php'  => '7.4',
+            'requires_php'  => '8.2',
             'last_updated'  => $release['published'],
             'sections'      => array(
                 'description' => 'SEO, metadata, and database cleaning and editing for WordPress. Automates Yoast SEO fields, reports what is costing the database, repairs attachments whose file and record disagree, and exposes the lot to the REST API and to MCP clients.',

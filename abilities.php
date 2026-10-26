@@ -1190,7 +1190,11 @@ class AutoSEOAbilities {
             ),
             'auto_additional_meta'     => array(
                 'type'        => 'boolean',
-                'description' => 'Write the extra meta tags - author, robots, keywords, Open Graph and Twitter - during a generation run. Turning this off leaves only title, description and focus keyword.',
+                'description' => 'Store the extra meta values - author, keywords, Open Graph and Twitter - during a generation run. Skipped while an SEO plugin (Yoast, Rank Math, AIOSEO, SEOPress) is active, because they are only used by the fallback output.',
+            ),
+            'fallback_meta_output'     => array(
+                'type'        => 'boolean',
+                'description' => 'Print the plugin\'s own author, keywords, Open Graph and Twitter tags in wp_head. Off by default, and has no effect while an SEO plugin (Yoast, Rank Math, AIOSEO, SEOPress) is active, so tags are never duplicated. No robots tag is ever printed.',
             ),
             'daily_updates_enabled'    => array(
                 'type'        => 'boolean',
@@ -1239,7 +1243,7 @@ class AutoSEOAbilities {
             ),
             'robots_default'           => array(
                 'type'        => 'string',
-                'description' => 'Default robots directive written into the robots meta tag, e.g. "index, follow" or "noindex, nofollow" for a staging site.',
+                'description' => 'Deprecated and ignored: the plugin no longer prints a robots tag. Set robots in Yoast SEO or with WordPress\'s "Discourage search engines" setting.',
             ),
             'twitter_username'         => array(
                 'type'        => 'string',

@@ -19,11 +19,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962  # 2.40.0
         with:
-          php-version: '7.4'
+          php-version: '8.3'
           coverage: none
 
       - name: Syntax check
@@ -74,7 +74,7 @@ jobs:
           cd .. && unzip -l "$slug.zip" | tail -3
 
       - name: Publish the release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64  # v3.0.3
         with:
           tag_name: ${{ steps.v.outputs.tag }}
           name: Nyuchi WordPress Optimization ${{ steps.v.outputs.version }}
