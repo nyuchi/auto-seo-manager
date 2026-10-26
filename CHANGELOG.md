@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The GitHub updater is now registered on every request instead of only in
+  wp-admin. WordPress runs update checks from wp-cron, automatic background
+  updates, REST/MCP and WP-CLI, which never saw releases, so auto-updates did
+  nothing. A release asset without a name no longer raises a PHP notice.
+
 ## [1.9.0] - 2026-10-26
 
 ### Added
