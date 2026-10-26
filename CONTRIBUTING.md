@@ -21,7 +21,7 @@ We welcome contributions in many forms:
 ### Prerequisites
 
 - **WordPress** 5.0+ development environment
-- **PHP** 7.4+ with WordPress coding standards
+- **PHP** 8.2+ with WordPress coding standards
 - **Git** for version control
 - **Composer** for PHP dependencies
 - **Node.js** for development tools
@@ -134,15 +134,16 @@ function auto_seo_example_function( $param ) {
 
 ### Running Tests
 
+The suite runs against a real WordPress on SQLite, with no MySQL server. See
+[TESTING.md](TESTING.md) for details.
+
 ```bash
-# Run all tests
+composer install
+composer run test:install-wp   # once: WordPress + SQLite drop-in
 composer run test
 
-# Run specific test file
-./vendor/bin/phpunit tests/TestAutoSEOManager.php
-
-# Run with coverage
-./vendor/bin/phpunit --coverage-html coverage/
+# One file
+./vendor/bin/phpunit tests/integration/UpdaterTest.php
 ```
 
 ### Writing Tests
@@ -488,6 +489,32 @@ All contributors are recognized in:
 - [WordPress Coding Standards](https://github.com/WordPress/WordPress-Coding-Standards)
 - [PHPUnit for WordPress](https://make.wordpress.org/core/handbook/testing/automated-testing/phpunit/)
 - [WP-CLI](https://wp-cli.org/)
+
+## Version policy: floors, no ceilings
+
+Every version constraint states a minimum we must not go under and never an
+upper limit.
+
+- **PHP**: the plugin requires PHP 8.2 or later (`Requires PHP` in the plugin
+  header and `readme.txt`). There is no maximum. CI lints on the floor (8.2),
+  the newest stable release (8.5) and the versions between them, and release
+  jobs run on 8.3. When a new PHP release ships, add it to the matrix in
+  `.github/workflows/ci.yml`; do not pin a ceiling.
+- **Dependencies**: never add an upper bound such as `<9` to a `composer.json`
+  or `package.json` constraint, and never add a `Tested up to` style cap that
+  blocks anything. Raise a floor only when the code needs it.
+- **Dependabot cooldown**: `.github/dependabot.yml` sets `cooldown` to 7 days,
+  a supply-chain safeguard. It only delays proposing non-security updates by
+  7 days and never blocks them. Security updates are not subject to cooldown.
+- **GitHub Actions** stay pinned to a full commit SHA with the release tag in a
+  comment, for example `actions/checkout@<sha>  # v7.0.1`. That pin is how
+  Actions are secured, and Dependabot proposes the newer pin.
+- **Dependabot** (`.github/dependabot.yml`) targets `staging` weekly, groups
+  minor and patch updates, and opens major updates as separate PRs. Do not add
+  `ignore` rules or version holds, so the newest version and majors can always
+  be proposed.
+- Raising a floor is a breaking requirement change for sites on older
+  versions: it ships in the next minor release and the changelog says so.
 
 ---
 

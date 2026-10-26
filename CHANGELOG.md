@@ -12,6 +12,90 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-10-26
+
+### Read before updating
+
+- **Your SEO plugin now owns the head tags.** While Yoast SEO, Rank Math, All
+  in One SEO or SEOPress is active, this plugin no longer prints any robots,
+  keywords, author, Open Graph or Twitter tags of its own. Before, pages could
+  carry two sets that disagreed, including an `index, follow` robots tag on
+  pages Yoast had marked `noindex`. Check your SEO plugin's settings, because
+  what it prints is now the only version search engines and social sites see.
+- **A one-way clean-up runs once.** On the first wp-admin page load after the
+  update (or on re-activation), the plugin deletes its own stored
+  `_auto_seo_robots`, `_auto_seo_keywords`, `_auto_seo_og_*` and
+  `_auto_seo_twitter_*` post meta from every post. Those values fed the
+  duplicate tags and some held raw `%%sitename%%` placeholders. This cannot be
+  undone from the plugin: take a database backup first if you want to keep
+  them. Your Yoast (or other SEO plugin) titles, descriptions and focus
+  keywords are not touched.
+- **PHP 8.2 or later is required.** Sites on PHP 8.1 or older must upgrade PHP
+  before updating.
+- **Security fix for sites with a GitHub token.** If you set
+  `AUTO_SEO_GITHUB_TOKEN`, earlier versions could send it to hosts other than
+  GitHub's API. Update, and consider replacing the token.
+
+### Added
+
+- The plugin's admin screen ends with the repository's GitHub star count and a
+  link to star it, and the Plugins row gets a "Star on GitHub" link. The count
+  is an anonymous request for the public repository record, made only when
+  that screen is opened and cached for 12 hours (a failure for an hour, shown
+  without a number). It sends nothing about the site: no site URL, no version
+  numbers and no identifier. There is no telemetry. Hide it with
+  `define( 'AUTO_SEO_HIDE_STAR_COUNT', true );` or the
+  `auto_seo_show_star_count` filter.
+- A PHPUnit suite on a real WordPress (SQLite, no MySQL) and a Tests workflow
+  running it on PHP 8.2 to 8.5. See TESTING.md.
+
+### Changed
+
+- **Breaking requirement change:** the minimum PHP version is now 8.2 (was
+  7.4). Sites on PHP 8.1 or older must upgrade PHP before updating. There is
+  no maximum PHP version.
+- CI lints on PHP 8.2, 8.3, 8.4 and 8.5, and release jobs run on 8.3. GitHub
+  Actions and the org reusable workflows (v0.7.0) are updated to their latest
+  releases, still pinned by commit SHA, and Dependabot now proposes updates
+  weekly against `staging`.
+
+### Fixed
+
+- The plugin no longer prints its own robots, keywords, author, Open Graph or
+  Twitter tags while Yoast SEO, Rank Math, All in One SEO or SEOPress is
+  active ([#31](https://github.com/nyuchi/auto-seo-manager/issues/31)). Pages
+  had two `og:title`, `og:description`, `og:site_name` and `twitter:site`
+  tags, and search results and 404 pages had a hard-coded `index, follow`
+  robots tag that contradicted Yoast's `noindex`. The plugin's own tags are
+  now a fallback for sites with no SEO plugin, behind the new **Print
+  fallback meta tags** setting (`fallback_meta_output`), which is off by
+  default. The detection can be overridden with the
+  `auto_seo_external_seo_plugin_active` filter and the decision with
+  `auto_seo_output_head_meta`.
+- A robots tag is never printed, and the `robots_default` setting is
+  ignored. Robots are left to WordPress (`wp_robots`) and the SEO plugin.
+- Yoast `%%variables%%` are resolved (with `wpseo_replace_vars()` when Yoast is
+  loaded) before a Yoast title or description is reused, and any variable left
+  over is removed, so a raw placeholder such as `%%sitename%% - %%sitedesc%%`
+  can no longer reach `og:title` or `twitter:title`.
+- Database upgrade 3 deletes the stored `_auto_seo_robots`,
+  `_auto_seo_keywords`, `_auto_seo_og_*` and `_auto_seo_twitter_*` post meta,
+  which held the duplicated and unresolved values. It runs on the first
+  wp-admin page load after the update. Re-activating the plugin now runs any
+  pending upgrade steps too, instead of skipping them.
+- The readme description now uses the plugin's current name.
+- The GitHub updater is now registered on every request instead of only in
+  wp-admin. WordPress runs update checks from wp-cron, automatic background
+  updates, REST/MCP and WP-CLI, which never saw releases, so auto-updates did
+  nothing. A release asset without a name no longer raises a PHP notice.
+- `AUTO_SEO_GITHUB_TOKEN` is sent only to this repository's GitHub API over
+  HTTPS. The check was a substring match, so any URL containing
+  `api.github.com/repos/nyuchi/auto-seo-manager` (on another host, in a query
+  string, or over plain http) also received it, and WordPress re-sent it to
+  GitHub's storage host when following the asset download redirect.
+- `db-write` no longer raises a PHP warning and a "doing it wrong" notice on
+  every call: its `value` input now declares a type.
+
 ## [1.9.0] - 2026-10-26
 
 ### Added

@@ -7,6 +7,10 @@
  * into WordPress's own update machinery: the admin shows "update available"
  * and the one-click update works exactly as it does for a directory plugin.
  *
+ * The hooks are registered on every request, not only in wp-admin, because
+ * WordPress checks for updates from wp-cron, from automatic background
+ * updates, over REST and from WP-CLI as well.
+ *
  * Deliberately self-contained rather than vendoring an update library. The
  * whole mechanism is one API call and two filters, and keeping it visible
  * means the auth path for a private repository is auditable.
@@ -44,6 +48,11 @@ class AutoSEOUpdater {
         add_filter('pre_set_site_transient_update_plugins', array($this, 'inject_update'));
         add_filter('plugins_api', array($this, 'plugin_details'), 10, 3);
         add_filter('http_request_args', array($this, 'authorise_download'), 10, 2);
+
+        // WordPress follows redirects itself and re-sends every header to the
+        // new location. GitHub answers an asset download with a redirect to
+        // its storage host, which must not receive the token.
+        add_action('requests-requests.before_redirect', array($this, 'drop_token_on_redirect'), 10, 2);
 
         // Let an admin force a fresh check rather than waiting out the cache.
         add_action('admin_init', array($this, 'maybe_flush'));
@@ -122,7 +131,7 @@ class AutoSEOUpdater {
         // WordPress will not recognise as an update of this one.
         if (!empty($body['assets']) && is_array($body['assets'])) {
             foreach ($body['assets'] as $asset) {
-                if (!empty($asset['browser_download_url']) && substr($asset['name'], -4) === '.zip') {
+                if (!empty($asset['browser_download_url']) && isset($asset['name']) && substr((string) $asset['name'], -4) === '.zip') {
                     $release['package'] = $asset['browser_download_url'];
                     $release['api_url'] = isset($asset['url']) ? $asset['url'] : '';
                     break;
@@ -161,7 +170,7 @@ class AutoSEOUpdater {
             'url'           => $release['url'],
             'package'       => $this->token() && !empty($release['api_url']) ? $release['api_url'] : $release['package'],
             'tested'        => '',
-            'requires_php'  => '7.4',
+            'requires_php'  => '8.2',
         );
 
         if (!isset($transient->response) || !is_array($transient->response)) {
@@ -197,7 +206,7 @@ class AutoSEOUpdater {
             'version'       => $release['version'],
             'author'        => '<a href="https://nyuchi.com">Nyuchi Web Services</a>',
             'homepage'      => $release['url'],
-            'requires_php'  => '7.4',
+            'requires_php'  => '8.2',
             'last_updated'  => $release['published'],
             'sections'      => array(
                 'description' => 'SEO, metadata, and database cleaning and editing for WordPress. Automates Yoast SEO fields, reports what is costing the database, repairs attachments whose file and record disagree, and exposes the lot to the REST API and to MCP clients.',
@@ -215,7 +224,7 @@ class AutoSEOUpdater {
     public function authorise_download($args, $url) {
         $token = $this->token();
 
-        if (!$token || strpos($url, 'api.github.com/repos/' . $this->repo()) === false) {
+        if (!$token || !$this->is_repo_api_url($url)) {
             return $args;
         }
 
@@ -227,6 +236,61 @@ class AutoSEOUpdater {
         $args['headers']['Accept']        = 'application/octet-stream';
 
         return $args;
+    }
+
+    /**
+     * Whether $url is this repository's GitHub API over HTTPS.
+     *
+     * Parsed rather than substring-matched: any other host can carry
+     * "api.github.com/repos/<repo>" in its path or query string, and plain
+     * http would send the token in the clear.
+     *
+     * @param string $url Request URL.
+     * @return bool
+     */
+    protected function is_repo_api_url($url) {
+        $parts = wp_parse_url($url);
+
+        if (!is_array($parts) || empty($parts['scheme']) || empty($parts['host']) || empty($parts['path'])) {
+            return false;
+        }
+
+        if ('https' !== strtolower($parts['scheme']) || 'api.github.com' !== strtolower($parts['host'])) {
+            return false;
+        }
+
+        if (isset($parts['port']) && 443 !== (int) $parts['port']) {
+            return false;
+        }
+
+        return 0 === strpos($parts['path'], '/repos/' . $this->repo() . '/');
+    }
+
+    /**
+     * Remove our token from a request being redirected off api.github.com.
+     *
+     * Hooked to Requests' before_redirect, which passes the location and the
+     * headers by reference. Other Authorization headers are left alone.
+     *
+     * @param string $location Redirect target.
+     * @param array  $headers  Headers about to be re-sent.
+     */
+    public function drop_token_on_redirect(&$location, &$headers) {
+        if (!is_array($headers) || $this->is_repo_api_url($location)) {
+            return;
+        }
+
+        $token = $this->token();
+
+        if (!$token) {
+            return;
+        }
+
+        foreach ($headers as $name => $value) {
+            if ('authorization' === strtolower((string) $name) && 'Bearer ' . $token === $value) {
+                unset($headers[$name]);
+            }
+        }
     }
 
     /**
