@@ -12,7 +12,7 @@
  * Text Domain: nyuchi-wp-optimization
  * Requires at least: 5.0
  * Tested up to: 7.0
- * Requires PHP: 7.4
+ * Requires PHP: 8.2
  * Network: false
  * 
  * @package AutoSEOManager

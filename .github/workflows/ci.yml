@@ -16,15 +16,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 7.4 is the declared floor; 8.3 is what the target host runs. Both must
-        # pass, because syntax that is fine on 8.3 can be fatal on 7.4.
-        php: ['7.4', '8.3']
+        # 8.2 is the declared floor (Requires PHP) and 8.5 is the newest stable
+        # release; 8.3 and 8.4 are between them. Every one must pass, because a
+        # syntax that is fine on one can be fatal on another. There is no upper
+        # bound: add each new PHP release here as soon as setup-php offers it.
+        php: ['8.2', '8.3', '8.4', '8.5']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Set up PHP ${{ matrix.php }}
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962  # 2.40.0
         with:
           php-version: ${{ matrix.php }}
           coverage: none

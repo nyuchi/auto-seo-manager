@@ -1,0 +1,18 @@
+version: 2
+
+updates:
+  # GitHub Actions stay pinned to a commit SHA with the tag in a comment;
+  # Dependabot proposes the newer pin. Majors arrive as their own PRs and
+  # nothing is ignored, so the newest version can always be proposed.
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: staging
+    schedule:
+      interval: weekly
+    groups:
+      actions-minor-patch:
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: 'chore(deps)'

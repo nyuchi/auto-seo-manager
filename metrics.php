@@ -621,13 +621,13 @@ class AutoSEOMetrics {
                 : sprintf('%d of %d scheduled events are overdue; %s is %s late. Nothing errors when cron stops - work simply never happens. Check DISABLE_WP_CRON and whether a real cron job is calling wp-cron.php.', (int) $cron['events_overdue'], (int) $cron['events_scheduled'], $late_hook, $this->duration($late)),
         );
 
-        $php_ok = PHP_VERSION_ID >= 80100;
+        $php_ok = PHP_VERSION_ID >= 80200;
 
         $checks['php_version'] = array(
             'ok'      => $php_ok,
             'message' => $php_ok
                 ? sprintf('PHP %s.', PHP_VERSION)
-                : sprintf('PHP %s is below 8.1. Older branches are out of security support and measurably slower on the same code.', PHP_VERSION),
+                : sprintf('PHP %s is below 8.2. Older branches are out of security support and measurably slower on the same code.', PHP_VERSION),
         );
 
         $cache_ok = !empty($runtime['object_cache_external']);

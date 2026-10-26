@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking requirement change:** the minimum PHP version is now 8.2 (was
+  7.4). Sites on PHP 8.1 or older must upgrade PHP before updating; this ships
+  in the next minor release. There is no maximum PHP version.
+- CI lints on PHP 8.2, 8.3, 8.4 and 8.5, and release jobs run on 8.3. GitHub
+  Actions and the org reusable workflows (v0.7.0) are updated to their latest
+  releases, still pinned by commit SHA, and Dependabot now proposes updates
+  weekly against `staging`.
+
 ### Fixed
 
 - The GitHub updater is now registered on every request instead of only in
