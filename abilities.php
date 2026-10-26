@@ -570,9 +570,11 @@ class AutoSEOAbilities {
                                         'description' => 'Yoast option key.',
                                     ),
                                     'from' => array(
+                                        'type'        => array('string', 'number', 'integer', 'boolean', 'array', 'object', 'null'),
                                         'description' => 'Value before the change.',
                                     ),
                                     'to'   => array(
+                                        'type'        => array('string', 'number', 'integer', 'boolean', 'array', 'object', 'null'),
                                         'description' => 'Value after the change.',
                                     ),
                                 ),
@@ -873,6 +875,9 @@ class AutoSEOAbilities {
 
         $dry_run = !(isset($input['dry_run']) && (false === $input['dry_run'] || 'false' === $input['dry_run']));
 
+        // Existence is judged against the full group, secrets included, so a key
+        // that does not exist is reported as unknown_key and not as secret.
+        $existing  = $this->yoast_group_values($group, false);
         $current   = $this->yoast_group_values($group);
         $applied   = array();
         $refused   = array();
@@ -881,13 +886,13 @@ class AutoSEOAbilities {
         foreach ($changes as $key => $value) {
             $key = (string) $key;
 
-            if ($this->is_secret_key($key)) {
-                $refused[] = array('key' => $key, 'reason' => 'secret');
+            if (!array_key_exists($key, $existing)) {
+                $refused[] = array('key' => $key, 'reason' => 'unknown_key');
                 continue;
             }
 
-            if (!array_key_exists($key, $current)) {
-                $refused[] = array('key' => $key, 'reason' => 'unknown_key');
+            if ($this->is_secret_key($key)) {
+                $refused[] = array('key' => $key, 'reason' => 'secret');
                 continue;
             }
 
@@ -1100,12 +1105,16 @@ class AutoSEOAbilities {
 
     /**
      * Current values of one Yoast option group, with secret-looking keys
-     * removed. Read through WPSEO_Options so Yoast's own defaults apply.
+     * removed unless asked to keep them. get_option() returns the stored group
+     * as is; a group row that is missing is recreated with Yoast's defaults on
+     * the next load (WPSEO_Options::ensure_options_exist), so in practice the
+     * defaults are always present.
      *
-     * @param string $group One of yoast_groups().
+     * @param string $group         One of yoast_groups().
+     * @param bool   $strip_secrets Drop secret-looking keys. Default true.
      * @return array Option key => value.
      */
-    private function yoast_group_values($group) {
+    private function yoast_group_values($group, $strip_secrets = true) {
         // get_option() returns one option's array. get_all() takes a list of
         // option names, not a group string, so it is not used here.
         $values = WPSEO_Options::get_option($group);
@@ -1117,7 +1126,7 @@ class AutoSEOAbilities {
         $out = array();
 
         foreach ($values as $key => $value) {
-            if ($this->is_secret_key((string) $key)) {
+            if ($strip_secrets && $this->is_secret_key((string) $key)) {
                 continue;
             }
 
@@ -1128,20 +1137,19 @@ class AutoSEOAbilities {
     }
 
     /**
-     * Keys that look like credentials. Matched anywhere in the name, so a
-     * verification or API token key is caught even when its name is unusual.
+     * Keys that look like credentials: a secret word (key, token, secret,
+     * password, singular or plural) as a whole word between _ or - separators,
+     * or as the end of the name. Whole words keep harmless settings such as
+     * keyword_analysis_active readable and writable, while index_now_key,
+     * semrush_tokens and wincher_tokens stay hidden and refused.
      *
      * @param string $key Option key.
      * @return bool
      */
     private function is_secret_key($key) {
-        foreach (array('key', 'token', 'secret', 'password') as $needle) {
-            if (false !== stripos($key, $needle)) {
-                return true;
-            }
-        }
+        $word = '(?:keys?|tokens?|secrets?|passwords?)';
 
-        return false;
+        return 1 === preg_match('/(?:^|[_-])' . $word . '(?:[_-]|$)|' . $word . '$/i', $key);
     }
 
     /**
