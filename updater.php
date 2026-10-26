@@ -7,6 +7,10 @@
  * into WordPress's own update machinery: the admin shows "update available"
  * and the one-click update works exactly as it does for a directory plugin.
  *
+ * The hooks are registered on every request, not only in wp-admin, because
+ * WordPress checks for updates from wp-cron, from automatic background
+ * updates, over REST and from WP-CLI as well.
+ *
  * Deliberately self-contained rather than vendoring an update library. The
  * whole mechanism is one API call and two filters, and keeping it visible
  * means the auth path for a private repository is auditable.
@@ -122,7 +126,7 @@ class AutoSEOUpdater {
         // WordPress will not recognise as an update of this one.
         if (!empty($body['assets']) && is_array($body['assets'])) {
             foreach ($body['assets'] as $asset) {
-                if (!empty($asset['browser_download_url']) && substr($asset['name'], -4) === '.zip') {
+                if (!empty($asset['browser_download_url']) && isset($asset['name']) && substr((string) $asset['name'], -4) === '.zip') {
                     $release['package'] = $asset['browser_download_url'];
                     $release['api_url'] = isset($asset['url']) ? $asset['url'] : '';
                     break;

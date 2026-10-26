@@ -1853,8 +1853,12 @@ if (file_exists($auto_seo_convert_file)) {
 
 // Updates from GitHub Releases. A plugin outside wordpress.org gets no update
 // notice, so without this a site sits on whatever version was installed.
+// Loaded on every request, not only in wp-admin: WordPress runs update checks
+// from wp-cron, automatic background updates, REST/MCP and WP-CLI too, and the
+// updater's filters must be registered for those to see a release. The
+// constructor only adds hooks and the GitHub call is cached.
 $auto_seo_updater_file = plugin_dir_path(__FILE__) . 'updater.php';
-if (is_admin() && file_exists($auto_seo_updater_file)) {
+if (file_exists($auto_seo_updater_file)) {
     require_once $auto_seo_updater_file;
 
     if (class_exists('AutoSEOUpdater')) {
