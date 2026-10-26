@@ -24,6 +24,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The plugin no longer prints its own robots, keywords, author, Open Graph or
+  Twitter tags while Yoast SEO, Rank Math, All in One SEO or SEOPress is
+  active ([#31](https://github.com/nyuchi/auto-seo-manager/issues/31)). Pages
+  had two `og:title`, `og:description`, `og:site_name` and `twitter:site`
+  tags, and search results and 404 pages had a hard-coded `index, follow`
+  robots tag that contradicted Yoast's `noindex`. The plugin's own tags are
+  now a fallback for sites with no SEO plugin, behind the new **Print
+  fallback meta tags** setting (`fallback_meta_output`), which is off by
+  default. The detection can be overridden with the
+  `auto_seo_external_seo_plugin_active` filter and the decision with
+  `auto_seo_output_head_meta`.
+- A robots tag is never printed, and the `robots_default` setting is
+  ignored. Robots are left to WordPress (`wp_robots`) and the SEO plugin.
+- Yoast `%%variables%%` are resolved (with `wpseo_replace_vars()` when Yoast is
+  loaded) before a Yoast title or description is reused, and any variable left
+  over is removed, so a raw placeholder such as `%%sitename%% - %%sitedesc%%`
+  can no longer reach `og:title` or `twitter:title`.
+- Database upgrade 3 deletes the stored `_auto_seo_robots`,
+  `_auto_seo_keywords`, `_auto_seo_og_*` and `_auto_seo_twitter_*` post meta,
+  which held the duplicated and unresolved values. It runs on the first
+  wp-admin page load after the update. Re-activating the plugin now runs any
+  pending upgrade steps too, instead of skipping them.
+- The readme description now uses the plugin's current name.
 - The GitHub updater is now registered on every request instead of only in
   wp-admin. WordPress runs update checks from wp-cron, automatic background
   updates, REST/MCP and WP-CLI, which never saw releases, so auto-updates did

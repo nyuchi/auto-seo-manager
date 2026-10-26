@@ -12,7 +12,7 @@ SEO, metadata, and database cleaning and editing. Fills empty Yoast SEO fields, 
 
 == Description ==
 
-Nyuchi SEO Addons writes into the Yoast SEO title, meta description and focus keyword
+Nyuchi WordPress Optimization writes into the Yoast SEO title, meta description and focus keyword
 fields when they have been left empty. It is aimed at sites where the content volume has
 outgrown the effort available to hand-write every field, and where a consistent template is
 preferable to a blank.
@@ -76,6 +76,17 @@ keywords are left alone.
 
 No. It writes into Yoast's fields and depends on Yoast being active. Yoast remains the
 source of truth for output, sitemaps and analysis.
+
+= Does it print its own meta tags? =
+
+Not while Yoast SEO, Rank Math, All in One SEO or SEOPress is active: those plugins print
+the robots, canonical, Open Graph and Twitter tags, and a second set would conflict with
+theirs. The only tag it may add is the Google site verification tag on the home page, when
+that setting is filled in. On a site with no SEO plugin, its author, keywords, Open Graph
+and Twitter tags can be turned on with **Print fallback meta tags**, which is off by
+default. It never prints a robots tag. Developers can override the detection with the
+`auto_seo_external_seo_plugin_active` filter, or the final decision with
+`auto_seo_output_head_meta`.
 
 = Why is the activity log empty? =
 
