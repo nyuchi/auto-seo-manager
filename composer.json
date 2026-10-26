@@ -1,0 +1,24 @@
+{
+  "name": "nyuchi/auto-seo-manager",
+  "description": "Development dependencies for the Nyuchi WordPress Optimization (auto-seo-manager) test suite. The plugin itself has no runtime Composer dependencies.",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": ">=8.2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.6",
+    "wp-phpunit/wp-phpunit": ">=6.8",
+    "yoast/phpunit-polyfills": ">=4.0"
+  },
+  "config": {
+    "platform": {
+      "php": "8.2.0"
+    },
+    "sort-packages": true
+  },
+  "scripts": {
+    "test:install-wp": "bash tests/bin/install-wp.sh",
+    "test": "phpunit"
+  }
+}

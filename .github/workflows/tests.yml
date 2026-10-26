@@ -1,0 +1,84 @@
+name: Tests
+
+# PHPUnit against a real WordPress on SQLite (no MySQL service): the WordPress
+# test library from wp-phpunit/wp-phpunit, core and the SQLite Database
+# Integration drop-in downloaded by tests/bin/install-wp.sh. See TESTING.md.
+#
+# Matrix: every supported PHP on the latest WordPress, and the floor PHP on
+# the floor WordPress. The "PHPUnit" job at the end is the one check to
+# require in branch protection; it fails if any matrix leg failed.
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  phpunit:
+    name: PHPUnit (PHP ${{ matrix.php }}, WordPress ${{ matrix.wp }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4', '8.5']
+        wp: ['latest']
+        include:
+          - php: '8.2'
+            wp: '6.8'
+
+    env:
+      WP_VERSION: ${{ matrix.wp }}
+      # Absolute, outside the checkout (WordPress will not auto-update a
+      # plugin under version control) and free of "..".
+      WP_CORE_DIR: /tmp/wordpress-tests
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Set up PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962  # 2.40.0
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo_sqlite, sqlite3, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Use the test library for WordPress ${{ matrix.wp }}
+        if: matrix.wp != 'latest'
+        # The test library must match the WordPress it drives; the lock file
+        # carries the newest one.
+        run: >-
+          composer update wp-phpunit/wp-phpunit
+          --with "wp-phpunit/wp-phpunit:~${{ matrix.wp }}.0"
+          --no-interaction --no-progress --prefer-dist
+
+      - name: Install WordPress ${{ matrix.wp }} and the SQLite drop-in
+        run: bash tests/bin/install-wp.sh
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit
+
+  result:
+    name: PHPUnit
+    if: always()
+    needs: phpunit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every matrix leg passed
+        run: |
+          if [ "${{ needs.phpunit.result }}" != "success" ]; then
+            echo "::error::PHPUnit matrix result: ${{ needs.phpunit.result }}"
+            exit 1
+          fi

@@ -134,15 +134,16 @@ function auto_seo_example_function( $param ) {
 
 ### Running Tests
 
+The suite runs against a real WordPress on SQLite, with no MySQL server. See
+[TESTING.md](TESTING.md) for details.
+
 ```bash
-# Run all tests
+composer install
+composer run test:install-wp   # once: WordPress + SQLite drop-in
 composer run test
 
-# Run specific test file
-./vendor/bin/phpunit tests/TestAutoSEOManager.php
-
-# Run with coverage
-./vendor/bin/phpunit --coverage-html coverage/
+# One file
+./vendor/bin/phpunit tests/integration/UpdaterTest.php
 ```
 
 ### Writing Tests

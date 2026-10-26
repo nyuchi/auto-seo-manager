@@ -145,8 +145,15 @@ telemetry or usage ping. To hide the star count, add
   star it, and the Plugins row gets a "Star on GitHub" link. The request is anonymous,
   sends nothing about the site and is cached for 12 hours. Hide it with
   AUTO_SEO_HIDE_STAR_COUNT or the auto_seo_show_star_count filter.
-* Maintenance: CI checks PHP 8.2 to 8.5, GitHub Actions are updated and pinned by commit,
-  and Dependabot proposes updates weekly.
+* Security: AUTO_SEO_GITHUB_TOKEN is now sent only to this repository's GitHub API over
+  HTTPS. Before, any URL containing the API path (on another host, in a query string or
+  over plain http) received it, and it followed the asset download redirect to GitHub's
+  storage host. Only sites that set a token are affected; consider replacing it.
+* Fixed: the db-write ability no longer raises a PHP warning and a "doing it wrong"
+  notice on every call.
+* Maintenance: a PHPUnit suite now runs against a real WordPress in CI, CI checks PHP 8.2
+  to 8.5, GitHub Actions are updated and pinned by commit, and Dependabot proposes
+  updates weekly.
 
 = 1.9.0 =
 * New: two abilities for the Yoast SEO site-wide settings. yoast-get-settings reads the
