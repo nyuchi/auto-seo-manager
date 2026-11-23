@@ -6,7 +6,6 @@ updates:
   # nothing is ignored, so the newest version can always be proposed.
   - package-ecosystem: github-actions
     directory: /
-    target-branch: staging
     schedule:
       interval: weekly
     cooldown:
