@@ -337,184 +337,23 @@ Brief description of changes.
 
 ### Versioning
 
-Releases follow the org versioning policy
-([nyuchi/.github#80](https://github.com/nyuchi/.github/issues/80)). The
-branch decides the bump, and there are no version labels:
+Every release follows the org policy
+([#80](https://github.com/nyuchi/.github/issues/80)):
 
-- **A merge into `staging`** (the live beta) is tagged as the next
-  **patch** automatically, by `staging-version.yml`.
-- **A release to `main`** is the next **minor** above the highest tag. The
-  PR that releases sets `AUTO_SEO_VERSION` in `auto-seo-manager.php` (and the plugin header) to it. CI refuses any other version
-  and names the right one.
-- **A major** is only ever made by hand: the owner runs the release
-  workflow from the Actions tab with `bump: major`.
-- Each segment holds 0–999. Patch 999 rolls into the next minor; minor 999
-  stops and asks for a manual major.
+- **Trunk-based, `main` only.** There is no `staging` branch.
+- **A merge to `main` titled `fix:`, `chore:`, `docs:` or `ci:` is a
+  PATCH** (x.y.z → x.y.z+1). It is tagged automatically.
+- **A merge to `main` titled `feat:` is a MINOR** (x.y.z → x.y+1.0).
+- **A MAJOR is manual only**: the owner runs the release workflow with
+  `bump: major`. Automation never makes one.
+- Minor and patch have no upper limit: patch 999 is followed by patch
+  1000, minor 999 by minor 1000. Only a major is manual.
+- `workflow_dispatch` on a release workflow takes
+  `bump: patch|minor|major` as a manual override.
 
-Versions released before 2026-10-04 are not renumbered.
-
-### Release Checklist
-
-- [ ] Update version numbers
-- [ ] Update CHANGELOG.md
-- [ ] Test compatibility
-- [ ] Update documentation
-- [ ] Create GitHub release
-- [ ] Submit to WordPress.org (if applicable)
-
-## 🏛️ Governance
-
-### Maintainers
-
-Current maintainers have the authority to:
-
-- Review and merge pull requests
-- Create releases
-- Moderate discussions
-- Set project direction
-
-### Decision Making
-
-- **Small changes**: Any maintainer can approve
-- **Major changes**: Require discussion and consensus
-- **Breaking changes**: Require community input
-
-### Code of Conduct
-
-We follow the [WordPress Community Code of Conduct](https://make.wordpress.org/handbook/community-code-of-conduct/):
-
-- **Be respectful** and inclusive
-- **Assume good intentions**
-- **Give constructive feedback**
-- **Focus on what's best** for the community
-
-## 📞 Getting Help
-
-### Communication Channels
-
-- **GitHub Issues**: Bug reports and feature requests
-- **GitHub Discussions**: General questions and ideas
-- **Professional Support**: [Nyuchi Web Services](https://nyuchi.com)
-- **Developer Contact**: Bryan Fawcett [@bryanfawcett](https://github.com/bryanfawcett)
-
-### Response Times
-
-- **Bug reports**: Within 48 hours
-- **Feature requests**: Within 1 week
-- **Pull requests**: Within 1 week
-- **Security issues**: Within 24 hours
-
-## 🎯 Contribution Areas
-
-### High Priority
-
-Current areas where contributions are especially welcome:
-
-- **Performance optimization**
-- **Integration with new plugins**
-- **Accessibility improvements**
-- **Mobile responsiveness**
-- **Security enhancements**
-
-### Skill-Based Contributions
-
-**PHP Developers:**
-
-- Core plugin features
-- Plugin integrations
-- Performance optimization
-- Security improvements
-
-**Frontend Developers:**
-
-- Admin interface improvements
-- Accessibility enhancements
-- Mobile optimization
-
-**Documentation Writers:**
-
-- User guides
-- Developer documentation
-- Tutorial content
-- Translation
-
-**Testers:**
-
-- Compatibility testing
-- User experience testing
-- Performance testing
-- Security testing
-
-**Designers:**
-
-- UI/UX improvements
-- Plugin assets
-- Marketing materials
-
-## 🙏 Recognition
-
-### Contributors
-
-All contributors are recognized in:
-
-- **GitHub contributors page**
-- **Plugin credits section**
-- **Release notes mentions**
-- **Annual contributor highlights**
-
-### Types of Recognition
-
-- **Code contributions**: Listed in plugin credits
-- **Documentation**: Mentioned in docs sections
-- **Testing**: Acknowledged in release notes
-- **Translations**: Listed in language packs
-
-## 📚 Resources
-
-### WordPress Development
-
-- [WordPress Coding Standards](https://developer.wordpress.org/coding-standards/)
-- [Plugin Development Handbook](https://developer.wordpress.org/plugins/)
-- [WordPress Hooks Reference](https://developer.wordpress.org/reference/hooks/)
-
-### SEO Resources
-
-- [Google SEO Guidelines](https://developers.google.com/search/docs)
-- [Schema.org Documentation](https://schema.org/)
-- [Open Graph Protocol](https://ogp.me/)
-- [Twitter Cards Guide](https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/abouts-cards)
-
-### Tools
-
-- [WordPress Coding Standards](https://github.com/WordPress/WordPress-Coding-Standards)
-- [PHPUnit for WordPress](https://make.wordpress.org/core/handbook/testing/automated-testing/phpunit/)
-- [WP-CLI](https://wp-cli.org/)
-
-## Version policy: floors, no ceilings
-
-Every version constraint states a minimum we must not go under and never an
-upper limit.
-
-- **PHP**: the plugin requires PHP 8.2 or later (`Requires PHP` in the plugin
-  header and `readme.txt`). There is no maximum. CI lints on the floor (8.2),
-  the newest stable release (8.5) and the versions between them, and release
-  jobs run on 8.3. When a new PHP release ships, add it to the matrix in
-  `.github/workflows/ci.yml`; do not pin a ceiling.
-- **Dependencies**: never add an upper bound such as `<9` to a `composer.json`
-  or `package.json` constraint, and never add a `Tested up to` style cap that
-  blocks anything. Raise a floor only when the code needs it.
-- **Dependabot cooldown**: `.github/dependabot.yml` sets `cooldown` to 7 days,
-  a supply-chain safeguard. It only delays proposing non-security updates by
-  7 days and never blocks them. Security updates are not subject to cooldown.
-- **GitHub Actions** stay pinned to a full commit SHA with the release tag in a
-  comment, for example `actions/checkout@<sha>  # v7.0.1`. That pin is how
-  Actions are secured, and Dependabot proposes the newer pin.
-- **Dependabot** (`.github/dependabot.yml`) targets `staging` weekly, groups
-  minor and patch updates, and opens major updates as separate PRs. Do not add
-  `ignore` rules or version holds, so the newest version and majors can always
-  be proposed.
-- Raising a floor is a breaking requirement change for sites on older
-  versions: it ships in the next minor release and the changelog says so.
+There are no version labels. Released versions are never renumbered.
+The calculator is
+[`.github/actions/next-version`](./.github/actions/next-version).
 
 ---
 
